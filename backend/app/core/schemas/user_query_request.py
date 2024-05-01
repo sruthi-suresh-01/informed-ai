@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-class QuestionAndDocumentsRequest(BaseModel):
+class QuestionsRequest(BaseModel):
     question: str
-    documents: List[str]
+    user_id: str
 
 class GetQuestionAndFactsResponse(BaseModel):
     question: str

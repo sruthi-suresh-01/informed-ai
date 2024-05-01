@@ -1,22 +1,57 @@
-import re
 import httpx
 import os
-from .config import logger
+from app.config import logger, ENV_VARS
 from urllib.parse import urlparse
 from fastapi import HTTPException
 
 import ipaddress
 
-APP_ENV = os.getenv("APP_ENV", "DEV")
+APP_ENV = ENV_VARS["APP_ENV"]
+
+headers = {'Accept': 'application/geo+json', 'User-Agent': 'informed-app'}
 
 
-def extract_dialogues(doc):
+zone_zip_map = {
+    '92507' : 'CAC065',
+    '92506' : 'CAC065',
+    '92505' : 'CAC065',
+
+}
+
+async def fetchAlerts(zip):
+    if zip in zone_zip_map:
+        zone_id = zone_zip_map[zip]
+        url = f"https://api.weather.gov/alerts/active/zone/{zone_id}"
+        response = { 'status': '', 'message' : '', 'data' : {} }
+
+        try:
+            if APP_ENV == "DEV" or is_safe_url(url):
+                async with httpx.AsyncClient(headers=headers) as client:
+                    alert_response = await client.get(url)
+                    if alert_response.status_code == 200:
+                        data = alert_response.json()
+                        if 'features' in data:
+                            response['data'] = data['features']
+                    else:
+                        logger.warning(f"Failed to fetch {url} with status code: {response.status_code}")
+            else:
+                raise  HTTPException(status_code=403, detail="Foribidden")
+        except Exception as e:
+            logger.warning(f"Exception occurred when fetching {url}: {e}")
+        finally:
+            logger.info("HTTP client operation completed.")
+            return response
+    else:
+        return { 'status': 'error', 'message' : 'Invalid Zip', 'data' : {} }
+
+def extract_alert_info(alert_features=[]):
     # Compile pattern to extract sentences
-    pattern = re.compile(r'\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}\s*\n(.*?): (.*?)(?=\n\d{2}:\d{2}|\Z)', re.DOTALL)
-    matches = pattern.findall(doc)
-    relevant_dialogues = [f"{speaker}: {speech_instance}" for speaker, speech_instance in matches]
-
-    return relevant_dialogues
+    allowed_keys = ['event', 'headline', 'description', 'instruction']
+    extracted_features = []
+    for feature in alert_features:
+        filtered_alert_info = {key: feature['properties'][key] for key in allowed_keys if key in feature['properties']}
+        extracted_features.append(filtered_alert_info)
+    return extracted_features
 
 # Fetch content from all the document urls
 async def fetch_all_docs(documents):

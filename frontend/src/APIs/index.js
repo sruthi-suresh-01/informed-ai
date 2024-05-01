@@ -1,32 +1,40 @@
 import { Constants } from "../Config/Constants";
 
 const api_urls = Constants.apis
-export function submitQuestionAndDocuments(question, documents) {
+export function submitQuestion(question, userId) {
     const apiUrl = api_urls.submit;
 
     const data = {
-        question, documents
+        question, user_id : userId
     };
+    
+    try {
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok'); // TODO: Handle gracefully
+            }
+            return response.json(); 
+        })
+        .then(data => {
+            return data
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    catch {
+        console.error("API Error")
 
-    fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok'); // TODO: Handle gracefully
-        }
-        return response.json(); 
-    })
-    .then(data => {
-        return data
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    }
+
+    
 }
 
 export function getQuestionAndFacts() {
@@ -41,6 +49,9 @@ export function getQuestionAndFacts() {
             }
             return data
         })
-        .catch(error => console.error('Error polling the API:', error));
+        .catch(error => {
+            console.error('Error polling the API:', error)
+            return { status : "error" }
+        });
 }
 

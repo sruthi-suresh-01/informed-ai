@@ -2,10 +2,10 @@ import os
 import tiktoken
 import json
 from openai import AsyncOpenAI
-from .config import logger
+from app.config import logger, ENV_VARS
 
-GPT_APIKEY = os.getenv("GPT_APIKEY", "")
-GPT_MODEL_NAME = os.getenv("GPT_MODEL_NAME", "gpt-3.5-turbo")
+GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
+GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
 
 
 # Context and Response Token size can be adjusted according to business requirements 
@@ -58,7 +58,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 
-async def generate_response(query='', context = ''):
+async def generate_response(query='', alerts = [], user_info = ''):
     config = {
         "model": GPT_MODEL_NAME,
         "temperature": 0,
@@ -66,21 +66,21 @@ async def generate_response(query='', context = ''):
         "max_tokens": MAX_RESPONSE_TOKENS
     }
 
-    gpt_response = {
-        "status": "",
-        "facts": []
-    }
+    context = ''
+    for alert in alerts:
+        context += f"Event: {alert['event']}; Headline: {alert['headline']}; Description: {alert['description']}; Instruction: {alert['instruction']}\n"
 
     messages = [
             {
                 "role": "system",
-
-                "content": "You are a highly skilled AI tasked with analyzing conversations from meeting logs to extract the most current and relevant decisions in json format. Given a question and call logs, your role involves identifying the latest agreed-upon facts from a series of dialogues in the logs. While going through each sentence of the context, if a decision was made and then later changed, only the final version of that decision should be in the answers. If a decision is made and then later decided against, don't record anything about that decision. Final output has to be a json. Your summarized answer is stored in key 'facts' which is an array of strings, each string being a single sentence of your answer. if two sentences are related to the same thing, club them. If no answers are possible for the question-query, simply return empty array of facts'. Sample= {'facts':['The team made decision 1','The team made decison 2']}"                },
+                "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their Age and health in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of facts'. Example= {'facts':['The weather is good','It is safe to go out']}. Try to answer in their preferred language of choice. If not available, English works"                
+            }, 
             {
                 "role": "user",
-                "content": "\nQuestion: " + query + "\nContext: \n" + context
+                "content": "\nQuestion: " + query + "\nContext: \n" + context + "\nUser Details: \n" + user_info
             }
     ]
+    
     try :
         num_tokens = num_tokens_from_messages(messages, model=GPT_MODEL_NAME)
         logger.info(f"Number of tokens in LLM prompt: {num_tokens}")
@@ -110,7 +110,10 @@ async def generate_response(query='', context = ''):
             "facts" : ["Sorry, I'm having some trouble answering your question. Please contact support"]
         }
 
-    return {}
+    return {
+            "status" : "error",
+            "facts" : ["Sorry, I'm having some trouble answering your question. Please contact support"]
+        }
 
 async def getLLMResponse(messages, config):
     response = await openAIClient.chat.completions.create(

@@ -15,14 +15,15 @@ export function MessagesContainer(props) {
                         if(message.type == "question") {
                             return (
                                 <div key={index} className={`${styles.message} ${styles.user}`}>
-                                    <strong>Question:</strong> {message.question}
-                                    <p><strong>Documents:</strong> 
+                                    <strong>Question:</strong> 
+                                    <p>{message.question}</p>
+                                    {/* <p><strong>Documents:</strong> 
                                         {
                                             message.docUrls && message.docUrls.map((documentUrl, msgIndex) => (
                                                 <p key={msgIndex}> {documentUrl}</p>
                                             ))
                                         }
-                                    </p>
+                                    </p> */}
                                 </div>
                             )
                         }

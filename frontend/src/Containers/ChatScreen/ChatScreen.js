@@ -1,39 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SubmitButton } from '../../Components/SubmitButton';
-import { MultiCreateAbleSelect } from '../../Components/MultiCreateAbleSelect';
+import { CustomSelect } from '../../Components/CustomSelect/CustomSelect';
 import { MessagesContainer } from '../MessagesContainer/';
 import styles from './ChatScreen.module.css';
-import { submitQuestionAndDocuments, getQuestionAndFacts } from '../../APIs';
+import { submitQuestion, getQuestionAndFacts } from '../../APIs';
 
-
-function isValidUrl(url) {
-    // const regex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})(:[0-9]+)?(\/[\w \.-]*)*\/?(\.txt)?$/;
-    const regex = /^https?:\/\/(?!((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(www\.)?[\da-z\.-]+\.[a-z\.]{2,6}(\/[\w\.-]*)*\/?(\.txt)?$/
-
-    return regex.test(url);
+const user_profiles = {
+    'user_1' : 'Rahul | English | Healthy',
+    'user_2' : 'Rahul | English | Asthma',
+    'user_3' : 'Raúl | Spanish | Asthma'
 }
-const initialOptions = [
-    { value: "https://storage.googleapis.com/cleric-assignment-call-logs/call_log_20240314_104111.txt", label: "https://storage.googleapis.com/cleric-assignment-call-logs/call_log_20240314_104111.txt" },
-    { value: "https://storage.googleapis.com/cleric-assignment-call-logs/call_log_20240315_104111.txt", label: "https://storage.googleapis.com/cleric-assignment-call-logs/call_log_20240315_104111.txt" },
-    { value: "https://storage.googleapis.com/cleric-assignment-call-logs/call_log_20240316_104111.txt", label: "https://storage.googleapis.com/cleric-assignment-call-logs/call_log_20240316_104111.txt" }
-];
 
 export function ChatScreen() {
     const [messages, setMessages] = useState([]);
     const [question, setQuestion] = useState('');
     const [waitingForResponse, setResponseState] = useState(false)
-    const [options, setOptions] = useState(initialOptions);
-    const [selectedOptions, setSelectedOptions] = useState([])
-    const [selectedUrls, setSelectedUrls] = useState([])
+    const [userId, setUserId] = useState('')
     const [isInputFocused, setIsFocused] = useState(false)
     const questionInputRef = useRef(null);
     const questionRef = useRef(question)
-    const selectedDocsRef = useRef(selectedUrls)
+    const selectedUserIdRef = useRef(userId)
     let intervalID = null
     
     useEffect(() => {
         questionRef.current = question;
-        selectedDocsRef.current = selectedUrls; 
+        selectedUserIdRef.current = userId; 
     });
 
     useEffect(() => {
@@ -48,31 +39,41 @@ export function ChatScreen() {
     }, []); // Runs only on mount and unmount
 
     const updateMessagesFromResponse = () => {
-        getQuestionAndFacts().then(response => {
+        try {
+            getQuestionAndFacts().then(response => {
             
-            setMessages(currentMessages => {
-
-                // Access the last question asked by the user
-                const lastMessage = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
-
-                // if The response recieved is for the last question (handling just in case), only then display the response
-                if (response.status === "done" && lastMessage && lastMessage.question  && lastMessage.question === response.question) {
-
-                    // Stop polling for response
-                    clearInterval(intervalID);
-                    setResponseState(false);
-
-                    return [...currentMessages, {
-                        question: response.question,
-                        facts: response.facts,
-                        type: "response"
-                    }];
-                }
-                return currentMessages; // Return current state if no updates are necessary
+                setMessages(currentMessages => {
+    
+                    // Access the last question asked by the user
+                    const lastMessage = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
+    
+                    // if The response recieved is for the last question (handling just in case), only then display the response
+                    if (response && response.status === "done" && lastMessage && lastMessage.question  && lastMessage.question === response.question) {
+    
+                        // Stop polling for response
+                        clearInterval(intervalID);
+                        setResponseState(false);
+    
+                        return [...currentMessages, {
+                            question: response.question,
+                            facts: response.facts,
+                            type: "response"
+                        }];
+                    } else if (response && response.status == "error") {
+                        // Stop polling for response
+                        clearInterval(intervalID);
+                        setResponseState(false);
+                    }
+                    return currentMessages; // Return current state if no updates are necessary
+                });
+            }).catch(error => {
+                console.error("Failed to get question and facts:", error);
             });
-        }).catch(error => {
-            console.error("Failed to get question and facts:", error);
-        });
+        }
+        catch {
+            console.error("Failed to get question and facts");
+        }
+        
     };
 
     // Checks for messages at a certain interval if it is expecting a message
@@ -105,36 +106,34 @@ export function ChatScreen() {
 
     const handleSendMessage = () => {
         const currentQuestion = questionRef.current
-        const docUrls = selectedDocsRef.current
+        const selectedUser = selectedUserIdRef.current
 
         // Check if we have a question and call log docuument paths
-        if (!currentQuestion.trim() || !docUrls.length) return;
+        if (!currentQuestion.trim() || !selectedUser.length) return;
 
         setMessages(currentMessages => [
             ...currentMessages,
             {
                 question: currentQuestion,
-                docUrls: docUrls,
                 type: 'question'
             }
         ]);
 
-        submitQuestionAndDocuments(currentQuestion, docUrls);
+        submitQuestion(currentQuestion, selectedUser);
         
         // Set a state to indicate that we are waiting for a response
         setResponseState(true); 
 
         // Clearing the input fields
         setQuestion('');
-        setSelectedUrls([])
-        setSelectedOptions([])
+        setUserId('')
     };
 
     return (
         <div className={styles.chatContainer}>
             <div className={styles.bannerContainer}>
                 <p>
-                    MemorAIze
+                    Informed
                 </p>
             </div>
 
@@ -155,39 +154,19 @@ export function ChatScreen() {
                         />
                     </div>
                     <div className={styles.linksContainer}>
-                        <MultiCreateAbleSelect
-                            value={selectedOptions}
-                            onChange={(selectedOptions, actionMeta) => {
-                                if(actionMeta.action == 'clear') {
-                                    // If all selected values are removed
-                                    setSelectedUrls([])
-                                    setSelectedOptions([])
+                        <CustomSelect
+                            isMulti={false}
+                            value={{ label : user_profiles[userId], value: userId}}
+                            onChange={(selectedOption) => {
+                                if(selectedOption && selectedOption.value) {
+                                    setUserId(selectedOption.value)
                                 }
-                                else if (actionMeta.action === 'remove-value' || actionMeta.action === 'pop-value' && actionMeta.removedValue && actionMeta.removedValue.value) {
-                                    // If a selected value is removed
-                                    setSelectedUrls(currentSelectedOptions => currentSelectedOptions.filter(item => item !== actionMeta.removedValue.value))
-                                    setSelectedOptions(selectedOptions)
-                                } else if (Array.isArray(selectedOptions) && selectedOptions.length > 0) {
-                                    // Adding new document only if URL is valid
-                                    const selectedUrl = selectedOptions[selectedOptions.length-1].value
-                                    if(isValidUrl(selectedUrl)) {
-                                        setSelectedOptions(selectedOptions)
-                                        setSelectedUrls(currentUrls => [...currentUrls, selectedUrl])
-                                    } else {
-                                        // TODO: Handle url error
-                                    }
-                                }
+                        
                             }}
-                            options={options}
-                            onCreateOption={(inputValue) => {
-                                if(isValidUrl(inputValue)) {
-                                    const newOption = { value: inputValue, label: inputValue };
-                                    setOptions(currentOptions => [...currentOptions, newOption]);
-                                    setSelectedOptions(currentSelectedOptions => [...currentSelectedOptions, newOption]);
-                                    setSelectedUrls(currentUrls => [...currentUrls, inputValue])
-                                }}
-                            }
-                            placeholder="Type or select documents"
+                            options={
+                                Object.keys(user_profiles).map((u_id) => ({ label : user_profiles[u_id], value: u_id }))}
+
+                            placeholder="Select User"
                         />
                     </div>
                 </div>

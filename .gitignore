@@ -30,6 +30,7 @@ db.sqlite3
 /backend/.venv
 /backend/venv/
 /backend/env/
+/backend/informed-venv/
 /backend/.env.local
 /backend/.env.development.local
 /backend/.env.test.local
