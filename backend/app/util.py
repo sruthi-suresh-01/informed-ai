@@ -1,10 +1,14 @@
 import httpx
 import os
+import json
 from app.config import logger, ENV_VARS
 from urllib.parse import urlparse
-from fastapi import HTTPException
-
+from fastapi import HTTPException, Depends
+from app.dependencies import db_dependency, redis_client, get_db
+from app.core.models.users import User, UserDetails, UserLanguage, Language, UserAllergies, UserHealthConditions, UserMedicalDetails, UserMedications
+from sqlalchemy.orm import Session
 import ipaddress
+from app.services.user_services import get_current_user
 
 APP_ENV = ENV_VARS["APP_ENV"]
 
@@ -17,6 +21,26 @@ zone_zip_map = {
     '92505' : 'CAC065',
 
 }
+def get_first_preferred_language(user_details):
+    # This finds the first preferred language or returns None if none are found
+    return next((ul.language for ul in user_details.languages if ul.is_preferred), None)
+
+
+def extract_user_info(user):
+    user_info = ''
+    if user and user.details :
+        user_info += 'User Details:\n'
+        preferred_language = get_first_preferred_language(user.details)
+        if(preferred_language and preferred_language.name):
+            user_info += f"Preferred Language: {preferred_language.name}; "
+        user_info += f"Age: {user.details.age};"
+        if user.medical_details and user.medical_details.health_conditions and len(user.medical_details.health_conditions) > 0:
+            health_conditions = user.medical_details.health_conditions
+            user_info += 'Health Conditions: '
+            for i, health_condition in enumerate(health_conditions):
+                user_info += f"condition_{i+1}: {health_condition.condition},  severity: {health_condition.severity},  description: {health_condition.description}"
+            user_info += ';'
+    return user_info
 
 async def fetchAlerts(zip):
     if zip in zone_zip_map:

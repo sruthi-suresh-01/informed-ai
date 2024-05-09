@@ -2,7 +2,8 @@
 .chatContainer {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    /* height: 100vh; */
+    height: 100%;
     font-family: Arial, sans-serif;
     border: 1px solid #e1e1e1;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -81,3 +82,8 @@ svg {
     height: 30px;
 }
 
+.loginDiv {
+    position: absolute;
+    float: right;
+    right: 30px;
+}

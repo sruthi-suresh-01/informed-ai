@@ -1,30 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as chatActions from '../../store/actionCreators/chatActionCreators'
+
 import { SubmitButton } from '../../Components/SubmitButton';
-import { CustomSelect } from '../../Components/CustomSelect/CustomSelect';
 import { MessagesContainer } from '../MessagesContainer/';
 import styles from './ChatScreen.module.css';
-import { submitQuestion, getQuestionAndFacts } from '../../APIs';
-
-const user_profiles = {
-    'user_1' : 'Rahul | English | Healthy',
-    'user_2' : 'Rahul | English | Asthma',
-    'user_3' : 'Raúl | Spanish | Asthma'
-}
 
 export function ChatScreen() {
-    const [messages, setMessages] = useState([]);
+    const dispatch = useDispatch();
+    const messages = useSelector(state => state.chat.messages);
+    const waitingForResponse = useSelector(state => state.chat.waitingForResponse);
+    const isChatLoading = useSelector(state => state.chat.isAgentRequestLoading);
     const [question, setQuestion] = useState('');
-    const [waitingForResponse, setResponseState] = useState(false)
-    const [userId, setUserId] = useState('')
     const [isInputFocused, setIsFocused] = useState(false)
     const questionInputRef = useRef(null);
     const questionRef = useRef(question)
-    const selectedUserIdRef = useRef(userId)
-    let intervalID = null
+    const intervalID = useRef(null);
     
     useEffect(() => {
         questionRef.current = question;
-        selectedUserIdRef.current = userId; 
     });
 
     useEffect(() => {
@@ -33,66 +27,33 @@ export function ChatScreen() {
 
         return () => {
             // Clearing Interval and Keyboard listener
-            clearInterval(intervalID)
+            if (intervalID.current) {
+                clearInterval(intervalID.current);
+                intervalID.current = null;
+            }
             window.removeEventListener('keydown', handleKeyPress);
         };
     }, []); // Runs only on mount and unmount
 
-    const updateMessagesFromResponse = () => {
-        try {
-            getQuestionAndFacts().then(response => {
-            
-                setMessages(currentMessages => {
-    
-                    // Access the last question asked by the user
-                    const lastMessage = currentMessages.length > 0 ? currentMessages[currentMessages.length - 1] : null;
-    
-                    // if The response recieved is for the last question (handling just in case), only then display the response
-                    if (response && response.status === "done" && lastMessage && lastMessage.question  && lastMessage.question === response.question) {
-    
-                        // Stop polling for response
-                        clearInterval(intervalID);
-                        setResponseState(false);
-    
-                        return [...currentMessages, {
-                            question: response.question,
-                            facts: response.facts,
-                            type: "response"
-                        }];
-                    } else if (response && response.status == "error") {
-                        // Stop polling for response
-                        clearInterval(intervalID);
-                        setResponseState(false);
-                    }
-                    return currentMessages; // Return current state if no updates are necessary
-                });
-            }).catch(error => {
-                console.error("Failed to get question and facts:", error);
-            });
-        }
-        catch {
-            console.error("Failed to get question and facts");
-        }
-        
-    };
 
-    // Checks for messages at a certain interval if it is expecting a message
-    const pollForResponse = () => {
-        clearInterval(intervalID)
-        intervalID = setInterval(updateMessagesFromResponse, 5000)
-    }
-
+    
     useEffect(() => {
-        console.info(`Waiting for response: ${waitingForResponse}`);
-        // Poll for response if we are expecting one
-        if(waitingForResponse) {
-            clearInterval(intervalID)
-            pollForResponse()
-        }      
-        return () => {
-            clearInterval(intervalID)
-        };
+
+    
+        if (waitingForResponse && !intervalID.current) {
+            intervalID.current = setInterval(() => {
+                dispatch(chatActions.getQuestionAndFacts());
+            }, 5000);
+        } 
+        else if (!waitingForResponse && intervalID.current) {
+            clearInterval(intervalID.current);
+            intervalID.current = null;
+        }
+
     }, [waitingForResponse]);
+
+
+
 
     const  handleKeyPress = (event) => {
         if (event && event.key === 'Enter') {
@@ -106,37 +67,18 @@ export function ChatScreen() {
 
     const handleSendMessage = () => {
         const currentQuestion = questionRef.current
-        const selectedUser = selectedUserIdRef.current
 
         // Check if we have a question and call log docuument paths
-        if (!currentQuestion.trim() || !selectedUser.length) return;
+        if (!currentQuestion.trim()) return;
 
-        setMessages(currentMessages => [
-            ...currentMessages,
-            {
-                question: currentQuestion,
-                type: 'question'
-            }
-        ]);
-
-        submitQuestion(currentQuestion, selectedUser);
-        
-        // Set a state to indicate that we are waiting for a response
-        setResponseState(true); 
+        dispatch(chatActions.submitQuestion(currentQuestion))
 
         // Clearing the input fields
         setQuestion('');
-        setUserId('')
     };
 
     return (
         <div className={styles.chatContainer}>
-            <div className={styles.bannerContainer}>
-                <p>
-                    Informed
-                </p>
-            </div>
-
             <MessagesContainer messages={messages} showLoader={waitingForResponse}/>
 
             <div className={styles.chatActionContainer}>
@@ -151,22 +93,6 @@ export function ChatScreen() {
                             onChange={(e) => setQuestion(e.target.value)}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
-                        />
-                    </div>
-                    <div className={styles.linksContainer}>
-                        <CustomSelect
-                            isMulti={false}
-                            value={{ label : user_profiles[userId], value: userId}}
-                            onChange={(selectedOption) => {
-                                if(selectedOption && selectedOption.value) {
-                                    setUserId(selectedOption.value)
-                                }
-                        
-                            }}
-                            options={
-                                Object.keys(user_profiles).map((u_id) => ({ label : user_profiles[u_id], value: u_id }))}
-
-                            placeholder="Select User"
                         />
                     </div>
                 </div>

@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from .config import logger, executor
 from .routers.router import api_router
+from .database import engine, Base
 
 app = FastAPI()
 app.mount("/files", StaticFiles(directory="static"), name="static")
@@ -16,7 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-
+Base.metadata.create_all(bind=engine)
 @app.on_event("startup")
 def on_startup():
     # Initialize resources

@@ -1,11 +1,17 @@
-import logo from './logo.svg';
 import './App.css';
 import { ChatScreen } from './Containers'; 
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HOCLayout from './Containers/HOCLayout/HOCLayout';
 function App() {
   return (
-    <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md flex items-center space-x-4">
-      <ChatScreen />
-    </div>
+    <Router basename="/informed">
+    <HOCLayout>
+      <Routes>
+          <Route path="/" element={<ChatScreen />} />
+        </Routes>
+
+    </HOCLayout>
+  </Router>
   );
 }
 

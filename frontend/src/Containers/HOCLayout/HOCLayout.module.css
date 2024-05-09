@@ -1,0 +1,8 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+}
+
+.contentContainer {
+    height: calc(100vH - 60px);
+}

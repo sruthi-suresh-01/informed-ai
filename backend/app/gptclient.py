@@ -3,6 +3,13 @@ import tiktoken
 import json
 from openai import AsyncOpenAI
 from app.config import logger, ENV_VARS
+import torch
+from selfcheckgpt.modeling_selfcheck import SelfCheckNLI
+from app.core.models.users import User
+from app.util import extract_user_info
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+selfcheck_nli = SelfCheckNLI(device=device)
 
 GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
 GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
@@ -10,7 +17,7 @@ GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
 
 # Context and Response Token size can be adjusted according to business requirements 
 MAX_CONTEXT_SIZE = 7000 
-MAX_RESPONSE_TOKENS = 2000
+MAX_RESPONSE_TOKENS = 1000
 
 openAIClient = AsyncOpenAI(
   api_key= GPT_APIKEY,
@@ -58,7 +65,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 
-async def generate_response(query='', alerts = [], user_info = ''):
+async def generate_response(query='', alerts = [], user_info='', num_samples=3, contradiction_threshold = 0.35):
     config = {
         "model": GPT_MODEL_NAME,
         "temperature": 0,
@@ -77,10 +84,10 @@ async def generate_response(query='', alerts = [], user_info = ''):
             }, 
             {
                 "role": "user",
-                "content": "\nQuestion: " + query + "\nContext: \n" + context + "\nUser Details: \n" + user_info
+                "content": "\nQuestion: " + query + "\nContext: \n" + context + user_info
             }
     ]
-    
+
     try :
         num_tokens = num_tokens_from_messages(messages, model=GPT_MODEL_NAME)
         logger.info(f"Number of tokens in LLM prompt: {num_tokens}")
@@ -89,8 +96,47 @@ async def generate_response(query='', alerts = [], user_info = ''):
                 "status" : "error",
                 "facts" : ["Sorry, that's too much text for me to process. Can you reduce the number of attached files and try again?"]
             }
-        response = await getLLMResponse(messages, config)
-        logger.info(f"GPT Response: {response}")
+        
+        sentences = []
+        samples = []
+
+        for i in range(num_samples+1):
+            sample_response = await getLLMResponse(messages, config)
+
+            logger.info(f"GPT Response {i+1}: {sample_response}")
+
+            if(sample_response):
+                try:
+                    sample_response = json.loads(sample_response)
+                    if "facts" in sample_response and isinstance(sample_response['facts'], list) and len(sample_response["facts"]) > 0:
+                        if i ==0:
+                            # Main Response
+                            sentences = sample_response["facts"]
+                        else:
+                            # Sampled Responses
+                            samples.append(".".join(sample_response["facts"]))
+                except Exception as e:
+                    print("exception")
+                    logger.error(e)
+
+            
+
+        sent_scores_nli = selfcheck_nli.predict(
+            sentences = sentences,      # list of sentences from primary GPT response
+            sampled_passages = samples, # list of passages from sampled GPT responses
+        )
+        contradiction_score = sum(sent_scores_nli) / len(sent_scores_nli)
+
+        logger.info(f"Overall Contradiction: {contradiction_score}")
+        if contradiction_score < contradiction_threshold:
+            response = { "facts" : sentences }
+            response['status'] = 'success'
+            return response
+        else:
+            return {
+            "status" : "success",
+            "facts" : ["Sorry, I cant answer your question"]
+            }
         
     except Exception as e:
         logger.error(e)
@@ -99,21 +145,6 @@ async def generate_response(query='', alerts = [], user_info = ''):
             "facts" : ["Sorry, I'm having some trouble answering your question. Please contact support"]
         }
 
-    if(response):
-        try:
-            response = json.loads(response)
-            response['status'] = 'success'
-            return response
-        except:
-            return {
-            "status" : "error",
-            "facts" : ["Sorry, I'm having some trouble answering your question. Please contact support"]
-        }
-
-    return {
-            "status" : "error",
-            "facts" : ["Sorry, I'm having some trouble answering your question. Please contact support"]
-        }
 
 async def getLLMResponse(messages, config):
     response = await openAIClient.chat.completions.create(
