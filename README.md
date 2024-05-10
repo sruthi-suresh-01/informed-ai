@@ -83,7 +83,7 @@ For developers preferring to manually set up the project without Docker:
    - Start the FastAPI server:
 
      ```bash
-     uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+     python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
      ```
 
    - The backend service will be running at [http://localhost:8000](http://localhost:8000).
