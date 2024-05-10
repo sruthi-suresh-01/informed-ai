@@ -17,13 +17,6 @@ export function MessagesContainer(props) {
                                 <div key={index} className={`${styles.message} ${styles.user}`}>
                                     <strong>Question:</strong> 
                                     <p>{message.question}</p>
-                                    {/* <p><strong>Documents:</strong> 
-                                        {
-                                            message.docUrls && message.docUrls.map((documentUrl, msgIndex) => (
-                                                <p key={msgIndex}> {documentUrl}</p>
-                                            ))
-                                        }
-                                    </p> */}
                                 </div>
                             )
                         }
@@ -37,6 +30,12 @@ export function MessagesContainer(props) {
                                             <p key={factIndex}> {fact}</p>
                                         ))
                                     } 
+                                    {message.source && 
+                                        <div>
+                                            <p><strong>Source: </strong><a style={{'cursor': 'pointer'}}href={message.source}>{message.source}</a></p>
+                                        </div>
+                                    }
+                                    
                                 </div>
                             )
                         }

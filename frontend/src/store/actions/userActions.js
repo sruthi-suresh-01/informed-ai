@@ -23,3 +23,15 @@ export const logoutSuccess = (message) => {
 export const logoutFailure = (error) => {
     return { type: actionTypes.LOGOUT_FAILURE, payload: error };
 }
+
+export const verifyLoginRequest = () => {
+    return { type: actionTypes.VERIFY_LOGIN_REQUEST };
+}
+
+export const verifyLoginSuccess = (user) => {
+    return { type: actionTypes.VERIFY_LOGIN_SUCCESS, payload: user };
+}
+
+export const verifyLoginFailure = (error) => {
+    return { type: actionTypes.VERIFY_LOGIN_FAILURE, payload: error };
+}

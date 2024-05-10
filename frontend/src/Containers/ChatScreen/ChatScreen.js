@@ -59,7 +59,7 @@ export function ChatScreen() {
         if (event && event.key === 'Enter') {
 
             // Triggering Submit on Key press except if the the user is interacting with the multi select dropdown
-            if(event.target && event.target.nodeName != "INPUT" ||  event.target == questionInputRef.current) {
+            if(event.target &&  event.target == questionInputRef.current) {
                 handleSendMessage()
             }        
         }

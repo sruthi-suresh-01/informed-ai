@@ -17,8 +17,8 @@ export const chatAgentPollRequest = () => {
     return { type: actionTypes.CHAT_AGENT_POLL_REQUEST };
 }
 
-export const chatAgentPollSuccess = ({ facts, questionId }) => {
-    return { type: actionTypes.CHAT_AGENT_POLL_SUCCESS, facts, questionId };
+export const chatAgentPollSuccess = (payload) => {
+    return { type: actionTypes.CHAT_AGENT_POLL_SUCCESS, ...payload };
 }
 
 export const chatAgentPollFailure = (error) => {

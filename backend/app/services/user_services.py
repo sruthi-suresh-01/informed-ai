@@ -7,7 +7,7 @@ from app.core.models.users import User, UserDetails, UserLanguage, Language, Use
 
 def get_current_user(session_token: str = Cookie(None), db: Session = Depends(get_db)):
     if session_token is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        return None
     
     serialized_session = redis_client.get(session_token)
     session_object = json.loads(serialized_session)

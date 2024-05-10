@@ -2,28 +2,22 @@ import React, { useState, useEffect } from 'react';
 import styles from './LoginModal.module.css';
 import { useDispatch, useSelector } from 'react-redux';
 import * as userActions from '../../store/actionCreators/userActionCreators'
-const LoginModal = ({ onClose, onLogin }) => {
+const LoginModal = ({ onClose }) => {
 
   const dispatch = useDispatch();
   const user = useSelector(state => state.user.user);
-  const error = useSelector(state => state.user.error);
-  const isLoading = useSelector(state => state.user.isLoading);
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = () => {
     dispatch(userActions.login({ username }))
-    // onLogin(username);
     setUsername('');
     setPassword('')
-    // onClose();
   };
 
   useEffect(() => {
     // console.info(`Waiting for response: ${waitingForResponse}`);
     if(user && user.username) {
-      onLogin(user.username);
       onClose();
     }
     
@@ -76,18 +70,15 @@ const LoginModal = ({ onClose, onLogin }) => {
 };
 
 const AuthComponent = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const dispatch = useDispatch();
+  const user = useSelector(state => state.user.user)
+  const isLoggedIn = useSelector(state => state.user.loggedIn)
   const [showModal, setShowModal] = useState(false);
-  const [username, setUsername] = useState('');
+  const displayName = (user && user.details && user.details.first_name && user.details.last_name &&  `${user.details.first_name} ${user.details.last_name}`) || ''
 
-  const handleLogin = (username) => {
-    setUsername(username);
-    setIsLoggedIn(true);
-  };
 
   const handleLogout = () => {
-    setUsername('');
-    setIsLoggedIn(false);
+    dispatch(userActions.logout())
   };
 
   return (
@@ -96,19 +87,18 @@ const AuthComponent = () => {
             {isLoggedIn ? (
             <button className={styles.close} onClick={handleLogout}>Logout</button>
             ) : (
-                <button onClick={() => setShowModal(true)}>Login</button>
+                <button className={styles.loginButton} onClick={() => setShowModal(true)}>Login</button>
             )}
         </div>
     
         {
         isLoggedIn &&
-            <div className={styles.loggedInMsg}>Welcome, {username}!</div>
+            <div className={styles.loggedInMsg}><p>Welcome, {displayName}!</p></div>
         }
 
         {showModal && (
         <LoginModal
             onClose={() => setShowModal(false)}
-            onLogin={handleLogin}
         />
         )}
     </div>

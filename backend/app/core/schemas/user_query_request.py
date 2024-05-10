@@ -8,3 +8,4 @@ class GetQuestionAndFactsResponse(BaseModel):
     question: str
     facts: Optional[List[str]] = None
     status: str
+    source: Optional[str] = None

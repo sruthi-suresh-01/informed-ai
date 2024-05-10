@@ -22,9 +22,12 @@ function chatReducer(state = initialState, action) {
         case actionTypes.CHAT_AGENT_POLL_REQUEST:
             return { ...state, isAgentRequestLoading: true, error: null };
         case actionTypes.CHAT_AGENT_POLL_SUCCESS:
-            return { ...state, isAgentRequestLoading: false, waitingForResponse: false, messages: [...state.messages, { type: 'response', facts: action.facts, questionId : action.questionId}], error: null };
+            return { ...state, isAgentRequestLoading: false, waitingForResponse: false, messages: [...state.messages, { type: 'response', facts: action.facts, questionId : action.questionId, source: action.source }], error: null };
         case actionTypes.CHAT_AGENT_POLL_FAILURE:
             return { ...state, isAgentRequestLoading: false, waitingForResponse: false, error: action.payload };
+
+        case actionTypes.LOGOUT_SUCCESS:
+            return { ...state, messages: [] };
         default:
         return state;
     }

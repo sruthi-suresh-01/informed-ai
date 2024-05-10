@@ -5,8 +5,6 @@ import { Constants } from "../../Config/Constants";
 const api_urls = Constants.apis
 const userActions = actions.user
 
-// Async action creator example using thunk middleware
-
 export const login = ({ username, password }) => dispatch => {
     dispatch(userActions.loginRequest());
 
@@ -16,8 +14,8 @@ export const login = ({ username, password }) => dispatch => {
                 const data = response.data;
                 if (data.error) {
                     dispatch(userActions.loginFailure(data.error));
-                } else {
-                    dispatch(userActions.loginSuccess(data.user));
+                } else if(data && data.data) {
+                    dispatch(userActions.loginSuccess(data.data));
                 }
             })
             .catch(error => {
@@ -42,5 +40,24 @@ export const logout = () => dispatch => {
             }
         })
         .catch(error => dispatch(userActions.logoutFailure(error.message)));
+}
+
+export const verifyLogin = () => dispatch => {
+    dispatch(userActions.verifyLoginRequest());
+
+    apiClient.get(api_urls.verifyLogin)
+        .then(response => {
+            const data = response.data
+            if (data.error) {
+            dispatch(userActions.verifyLoginFailure(data.error));
+            } else if(!data.sessionAlive){
+                dispatch(userActions.verifyLoginFailure("No Session found"));
+            } else {
+            dispatch(userActions.verifyLoginSuccess(data.data));
+            }
+        })
+        .catch(error => {
+            dispatch(userActions.verifyLoginFailure(error.message))
+        });
 }
 

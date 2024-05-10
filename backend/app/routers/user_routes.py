@@ -36,7 +36,7 @@ async def register_user(user: CreateUserRequest, request: Request, db: db_depend
 @user_router.post("/set-user-details/{username}")
 async def set_user_details(username: str, details: UserDetailsRequest, db: db_dependency, current_user: User = Depends(get_current_user)):
 
-    if current_user.username != username and current_user.account_type != "admin":
+    if not current_user or current_user.username != username and current_user.account_type != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user's details")
     # Check if the user exists
     user = current_user
@@ -80,7 +80,7 @@ async def set_user_details(username: str, details: UserDetailsRequest, db: db_de
 @user_router.get("/get-user-details/{username}", response_model=UserDetailsResponse)
 async def get_user_details(username: str, db: db_dependency, current_user: User = Depends(get_current_user)):
 
-    if current_user.username != username and current_user.account_type != "admin":
+    if not current_user or current_user.username != username and current_user.account_type != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user's details")
 
     # Fetch user by username including details and languages
@@ -119,7 +119,7 @@ async def get_user_details(username: str, db: db_dependency, current_user: User 
 @user_router.get("/{username}/medical-details", response_model=MedicalDetails)
 async def get_medical_details(username: str, db: db_dependency, current_user: User = Depends(get_current_user)):
 
-    if current_user.username != username and current_user.account_type != "admin":
+    if not current_user or current_user.username != username and current_user.account_type != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user's details")
     
     user = current_user
@@ -137,7 +137,7 @@ async def get_medical_details(username: str, db: db_dependency, current_user: Us
 
 @user_router.post("/{username}/medical-details")
 async def set_medical_details(username: str, details: UserMedicalDetailsRequest, db: db_dependency, current_user: User = Depends(get_current_user)):
-    if current_user.username != username and current_user.account_type != "admin":
+    if not current_user or current_user.username != username and current_user.account_type != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this user's details")
     
     user = current_user
@@ -202,7 +202,13 @@ async def set_medical_details(username: str, details: UserMedicalDetailsRequest,
 
 @user_router.post("/login")
 async def login(login_request: LoginRequest, response: Response, db: db_dependency):
-    db_user = db.query(User).filter(User.username == login_request.username).first()
+    db_user = db.query(User).options(
+        # Load UserDetails
+        joinedload(User.details).options(
+            # Load languages through UserLanguage and join Language details
+            joinedload(UserDetails.languages).joinedload(UserLanguage.language),
+        )
+    ).filter(User.username == login_request.username).one_or_none()
     if db_user:
         session_token = secrets.token_urlsafe()
         session_object = {
@@ -212,7 +218,7 @@ async def login(login_request: LoginRequest, response: Response, db: db_dependen
         serialized_session = json.dumps(session_object)
         redis_client.set(session_token, serialized_session, ex=3600)  # Store session with 1-hour expiration
         response.set_cookie(key="session_token", value=session_token, httponly=True, secure=True, samesite='Lax')
-        return {"message": "Login Successful"}
+        return {"data": db_user, "message": "Login Successful"}
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -220,16 +226,13 @@ async def login(login_request: LoginRequest, response: Response, db: db_dependen
         )
     
 @user_router.get("/me")
-async def read_users_me(request: Request):
-    session_token = request.cookies.get("session_token")
-    if session_token:
-        # username = redis_client.get(session_token)
-        serialized_session = redis_client.get(session_token)
-        session_object = json.loads(serialized_session)
-        if not session_object or not session_object["username"]:
-            raise HTTPException(status_code=400, detail="Invalid session or not logged in")
-        return {"username": session_object["username"]}
-    raise HTTPException(status_code=400, detail="No active session found")
+async def read_users_me(request: Request, current_user: User = Depends(get_current_user)):
+    if current_user:
+        # TODO: Don't return Medical Details
+        return {"data": current_user, 'sessionAlive': True, "message": "Login Successful"}
+    else:
+        return {'sessionAlive': False, "message": "No Session Found"}
+    # raise HTTPException(status_code=400, detail="No active session found")
 
 @user_router.get("/logout")
 async def logout(request: Request, response: Response):

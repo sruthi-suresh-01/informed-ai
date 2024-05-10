@@ -80,7 +80,7 @@ async def generate_response(query='', alerts = [], user_info='', num_samples=3, 
     messages = [
             {
                 "role": "system",
-                "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their Age and health in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of facts'. Example= {'facts':['The weather is good','It is safe to go out']}. Try to answer in their preferred language of choice. If not available, English works"                
+                "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their Age and health in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of facts'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'facts':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works"                
             }, 
             {
                 "role": "user",
@@ -131,6 +131,7 @@ async def generate_response(query='', alerts = [], user_info='', num_samples=3, 
         if contradiction_score < contradiction_threshold:
             response = { "facts" : sentences }
             response['status'] = 'success'
+            response['source'] = 'https://api.weather.gov'
             return response
         else:
             return {

@@ -111,6 +111,8 @@ async def process_query(request: QuestionsRequest, user):
 
                 processing_data["facts"] = facts
                 processing_data["status"] = "done"
+                if gpt_response and gpt_response['source']:
+                    processing_data["source"] = gpt_response['source']
 
                 logger.info(processing_data["facts"])
 
