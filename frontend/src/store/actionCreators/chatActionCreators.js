@@ -43,6 +43,7 @@ export const getQuestionAndFacts = () => dispatch => {
             }
         })
         .catch(error => {
+            console.log("chat error")
             dispatch(chatActions.chatAgentPollFailure(error.message))
         });
 }

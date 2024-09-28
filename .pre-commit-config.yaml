@@ -1,0 +1,22 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.4.0"
+    hooks:
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^charts|^misc/flux|^scenarios|^terraform/scenarios
+      - id: end-of-file-fixer
+        exclude: ^caches|^tests/fixtures/pg_dumps
+      - id: trailing-whitespace
+        exclude: ^caches|^terraform|^flux
+  - repo: local
+    hooks:
+      - id: validate-lint-static-and-dependencies
+        name: linting, static and dependency checks
+        entry: make code-validate
+        language: system
+        pass_filenames: false
+        always_run: true
