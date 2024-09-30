@@ -7,8 +7,9 @@ from loguru import logger
 
 from informed.config import ENV_VARS
 from informed.db_models.users import UserDetails, User, UserLanguage
+import os
 
-APP_ENV = ENV_VARS["APP_ENV"]
+APP_ENV = os.getenv("APP_ENV", "DEV")
 
 headers = {"Accept": "application/geo+json", "User-Agent": "informed-app"}
 
