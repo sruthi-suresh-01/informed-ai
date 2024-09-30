@@ -11,14 +11,14 @@ export function ChatScreen() {
     const messages = useSelector(state => state.chat.messages);
     const waitingForResponse = useSelector(state => state.chat.waitingForResponse);
     const isChatLoading = useSelector(state => state.chat.isAgentRequestLoading);
-    const [question, setQuestion] = useState('');
+    const [query, setQuery] = useState('');
     const [isInputFocused, setIsFocused] = useState(false)
     const questionInputRef = useRef(null);
-    const questionRef = useRef(question)
+    const queryRef = useRef(query)
     const intervalID = useRef(null);
-    
+
     useEffect(() => {
-        questionRef.current = question;
+        queryRef.current = query;
     });
 
     useEffect(() => {
@@ -36,15 +36,15 @@ export function ChatScreen() {
     }, []); // Runs only on mount and unmount
 
 
-    
+
     useEffect(() => {
 
-    
+
         if (waitingForResponse && !intervalID.current) {
             intervalID.current = setInterval(() => {
                 dispatch(chatActions.getQuestionAndFacts());
             }, 5000);
-        } 
+        }
         else if (!waitingForResponse && intervalID.current) {
             clearInterval(intervalID.current);
             intervalID.current = null;
@@ -61,20 +61,20 @@ export function ChatScreen() {
             // Triggering Submit on Key press except if the the user is interacting with the multi select dropdown
             if(event.target &&  event.target == questionInputRef.current) {
                 handleSendMessage()
-            }        
+            }
         }
     }
 
     const handleSendMessage = () => {
-        const currentQuestion = questionRef.current
+        const currentQuery = queryRef.current
 
         // Check if we have a question and call log docuument paths
-        if (!currentQuestion.trim()) return;
+        if (!currentQuery.trim()) return;
 
-        dispatch(chatActions.submitQuestion(currentQuestion))
+        dispatch(chatActions.submitQuestion(currentQuery))
 
         // Clearing the input fields
-        setQuestion('');
+        setQuery('');
     };
 
     return (
@@ -89,8 +89,8 @@ export function ChatScreen() {
                             type="text"
                             placeholder="Type your question here..."
                             className={styles.questionInput}
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                         />

@@ -5,6 +5,31 @@ from typing import Any, Literal, Self
 from loguru import logger as log
 from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+
+APP_ENV = os.getenv("APP_ENV", "DEV")
+
+DB_USERNAME = os.getenv("DB_USERNAME")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_SERVER_NAME = os.getenv("DB_SERVER_NAME")
+DB_PORT = os.getenv("DB_PORT")
+DB_DATABASE_NAME = os.getenv("DB_DATABASE_NAME")
+DB_URL = os.getenv("DB_URL", "postgresql://postgres:toor@localhost:5432/Informed")
+
+GPT_APIKEY = os.getenv("GPT_APIKEY", "")
+GPT_MODEL_NAME = os.getenv("GPT_MODEL_NAME", "gpt-3.5-turbo")
+
+ENV_VARS = {
+    "DB_USERNAME": DB_USERNAME,
+    "DB_PASSWORD": DB_PASSWORD,
+    "DB_SERVER_NAME": DB_SERVER_NAME,
+    "DB_PORT": DB_PORT,
+    "DB_DATABASE_NAME": DB_DATABASE_NAME,
+    "DB_URL": DB_URL,
+    "APP_ENV": APP_ENV,
+    "GPT_APIKEY": GPT_APIKEY,
+    "GPT_MODEL_NAME": GPT_MODEL_NAME,
+}
 
 
 class SafeDumpableModel(BaseModel):
@@ -21,169 +46,6 @@ class SafeDumpableModel(BaseModel):
                 dump[name] = "[REDACTED]"
 
         return dump
-
-
-class CacheKind(str, Enum):
-    FILE = "file"
-    INMEMORY = "inmemory"
-    DATABASE = "db"
-
-
-class CacheConfig(SafeDumpableModel):
-    enabled: bool = Field(default=False, exclude=False)
-    kind: CacheKind = Field(default=CacheKind.FILE, exclude=False)
-    name: str = Field(exclude=False)
-    store: dict[str, Any] = {}
-
-
-class RetrievalConfig(SafeDumpableModel):
-    enabled: bool = Field(default=True, exclude=False)
-    kubernetes_max_results: int = Field(default=10, exclude=False)
-    confluence_max_results: int = Field(default=25, exclude=False)
-    # GPT-4o has a context window of 128k tokens, Sonnet has 200k tokens.
-    # Divide the confluence_source_text_max_chars by 4 and
-    # multiply by confluence_max_results to get the estimated token count
-    confluence_source_text_max_chars: int = Field(default=6000, exclude=False)
-    similarity_threshold: float = Field(default=0.0, exclude=False)
-    max_retrieval_attempts: int = Field(default=3, exclude=False)
-
-
-class AzureOpenAILLMConfig(SafeDumpableModel):
-    api_key: SecretStr
-    api_version: str = Field(default="2024-05-01-preview", exclude=False)
-    api_base: str = Field(
-        default="https://azure-oai-1.openai.azure.com/", exclude=False
-    )
-
-
-class OpenAILLMConfig(SafeDumpableModel):
-    api_key: SecretStr
-
-
-class AnthropicLLMConfig(SafeDumpableModel):
-    api_key: SecretStr
-
-
-class VertexAILLMConfig(SafeDumpableModel):
-    vertex_ai_project: str
-    vertex_ai_location: str = Field(exclude=False)
-
-
-class VertexAIEmbeddingConfig(SafeDumpableModel):
-    vertex_ai_project: str
-    vertex_ai_location: str = Field(exclude=False)
-
-    # High RPM regions have RPM of 1500 for default `textembedding-gecko@003` embedding model
-    # Low RPM regions have RPM of 100 for `textembedding-gecko@003` embedding model
-    # See quotas for more info: https://cloud.google.com/vertex-ai/generative-ai/docs/quotas
-    @property
-    def has_high_rpm(self) -> bool:
-        return self.vertex_ai_location == "us-central1"
-
-
-class LLMProvider(str, Enum):
-    OPENAI = "openai"
-    AZURE = "azure"
-    ANTHROPIC = "anthropic"
-    VERTEX_AI = "vertex_ai"  # this works for sonnet but not gemini
-    VERTEX_AI_BETA = "vertex_ai_beta"  # this works for gemini but not sonnet
-
-
-class EmbeddingProvider(str, Enum):
-    OPENAI = "openai"
-    AZURE = "azure"
-    VERTEX_AI = "vertex_ai"
-
-
-# See instructions in READMD.md for switching between different LLM/embedding providers or models
-class LLMConfig(SafeDumpableModel):
-    # TODO (peter): support different models at the request level
-    cache_config: CacheConfig = CacheConfig(
-        enabled=False, kind=CacheKind.INMEMORY, name="llm_cache"
-    )
-    llm_provider: LLMProvider = Field(exclude=False)
-    llm_model_name: str = Field(exclude=False)
-    embedding_provider: EmbeddingProvider = Field(exclude=False)
-    embedding_model_name: str = Field(exclude=False)
-    embedding_max_tokens: int = Field(exclude=False)
-    embedding_max_concurrency: int = Field(exclude=False)
-    embedding_batch_size: int = Field(exclude=False)
-    azure: AzureOpenAILLMConfig | None = None
-    openai: OpenAILLMConfig | None = None
-    anthropic: AnthropicLLMConfig | None = None
-    # we separate the vertex config because we often want to use different regions for LLMs and embedding models
-    vertex_llm: VertexAILLMConfig | None = None
-    vertex_embedding: VertexAIEmbeddingConfig | None = None
-    temperature: float = Field(default=0.0, exclude=False)
-    wait_on_retry: bool = Field(default=True, exclude=False)
-
-    def validate_api_keys_are_set(self) -> None:
-        if (
-            self.llm_provider == LLMProvider.OPENAI
-            or self.embedding_provider == EmbeddingProvider.OPENAI
-        ) and (not self.openai):
-            raise ValueError("OpenAI API key is not set")
-
-        if (
-            self.llm_provider == LLMProvider.AZURE
-            or self.embedding_provider == EmbeddingProvider.AZURE
-        ) and (not self.azure):
-            raise ValueError("Azure OpenAI API key is not set")
-
-        if self.llm_provider == LLMProvider.ANTHROPIC and not self.anthropic:
-            raise ValueError("Anthropic API key is not set")
-
-    @property
-    def llm_model(self) -> str:
-        return self.llm_provider + "/" + self.llm_model_name
-
-    @property
-    def llm_params(self) -> dict[str, Any]:
-        params: BaseModel | None = None
-        if self.llm_provider == LLMProvider.OPENAI and self.openai:
-            params = self.openai
-        if self.llm_provider == LLMProvider.AZURE and self.azure:
-            params = self.azure
-        if self.llm_provider == LLMProvider.ANTHROPIC and self.anthropic:
-            params = self.anthropic
-        if (
-            self.llm_provider in [LLMProvider.VERTEX_AI, LLMProvider.VERTEX_AI_BETA]
-            and self.vertex_llm
-        ):
-            params = self.vertex_llm
-        if params is not None:
-            params_dict = params.model_dump()
-            for name, annotation in params.__annotations__.items():
-                if annotation == SecretStr and name in params_dict:
-                    params_dict[name] = getattr(params, name).get_secret_value()
-            return params_dict
-        raise ValueError(f"invalid parameters for LLM provider: {self.llm_provider}")
-
-    @property
-    def embedding_model(self) -> str:
-        return self.embedding_provider + "/" + self.embedding_model_name
-
-    @property
-    def embedding_params(self) -> dict[str, Any]:
-        params: BaseModel | None = None
-        if self.embedding_provider == EmbeddingProvider.OPENAI and self.openai:
-            params = self.openai
-        if self.embedding_provider == EmbeddingProvider.AZURE and self.azure:
-            params = self.azure
-        if (
-            self.embedding_provider == EmbeddingProvider.VERTEX_AI
-            and self.vertex_embedding
-        ):
-            params = self.vertex_embedding
-        if params is not None:
-            params_dict = params.model_dump()
-            for name, annotation in params.__annotations__.items():
-                if annotation == SecretStr and name in params_dict:
-                    params_dict[name] = getattr(params, name).get_secret_value()
-            return params_dict
-        raise ValueError(
-            f"invalid parameters for embedding provider: {self.embedding_provider}"
-        )
 
 
 class OpenTelemetryTracingConfig(SafeDumpableModel):

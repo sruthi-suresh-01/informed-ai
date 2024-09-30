@@ -1,5 +1,5 @@
 import './App.css';
-import { ChatScreen } from './Containers'; 
+import { ChatScreen } from './Containers';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HOCLayout from './Containers/HOCLayout/HOCLayout';
 function App() {

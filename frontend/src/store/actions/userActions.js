@@ -72,7 +72,7 @@ export const setUserDetailsFailure = (error) => {
     return { type: actionTypes.SET_USER_DETAILS_FAILURE, payload: error };
 }
 
-// 
+//
 export const getUserMedicalDetailsRequest = () => {
     return { type: actionTypes.GET_USER_MEDICAL_DETAILS_REQUEST };
 }

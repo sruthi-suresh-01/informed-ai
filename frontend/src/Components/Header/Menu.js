@@ -102,7 +102,7 @@ export function Menu(props) {
                 break
 
         }
-            
+
 
         showNotification({ severity: 'success', message: menuItems.find((item) => item.code == selectedMenuItem)?.dialogProps?.success_msg });
         handleDialogClose()
@@ -184,7 +184,7 @@ export function Menu(props) {
                 selectedMenuItem == 'dependants' &&
                 <UserUpdate onChange={handleDialogFormChange}/>
             }
-            
+
         </DialogWrapper>
 
         </div>

@@ -16,9 +16,9 @@ const severities = [
 ];
 
 const sensitivityTypes = {
-  'rain': 'Rain', 
-  'temperature': 'Temperature', 
-  'air_quality': 'Air Quality' 
+  'rain': 'Rain',
+  'temperature': 'Temperature',
+  'air_quality': 'Air Quality'
 }
 
 const initialHealthDetails = {
@@ -244,7 +244,7 @@ const HealthUpdate = ({ onChange }) => {
           Add Condition
         </Button>
       </Grid>
-      
+
     </Grid>
   );
 };

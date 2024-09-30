@@ -9,7 +9,7 @@ const initialState = {
   loggedIn: false
 };
 
-  
+
 function userReducer(state = initialState, action) {
     switch (action.type) {
         case actionTypes.REGISTER_USER_REQUEST:
@@ -37,7 +37,7 @@ function userReducer(state = initialState, action) {
         case actionTypes.VERIFY_LOGIN_FAILURE:
           return { ...state, isLoading: false, loggedIn: false, error: action.payload };
 
-        // 
+        //
         case actionTypes.GET_USER_DETAILS_REQUEST:
           return { ...state, isLoading: true, user_details: {}, error: null };
         case actionTypes.GET_USER_DETAILS_SUCCESS:
@@ -51,7 +51,7 @@ function userReducer(state = initialState, action) {
         case actionTypes.SET_USER_DETAILS_FAILURE:
           return { ...state, isLoading: false, user_details: {}, error: action.payload };
 
-        // 
+        //
         case actionTypes.GET_USER_MEDICAL_DETAILS_REQUEST:
           return { ...state, isLoading: true, user_medical_details: {}, error: null };
         case actionTypes.GET_USER_MEDICAL_DETAILS_SUCCESS:
@@ -70,4 +70,3 @@ function userReducer(state = initialState, action) {
 }
 
 export default userReducer;
-  

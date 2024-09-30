@@ -61,24 +61,24 @@ export const verifyLogin = () => dispatch => {
         });
 }
 
-export const register = ({ username, password }) => dispatch => {
-    dispatch(userActions.loginRequest());
+export const registerUser = ({ username, email }) => dispatch => {
+    dispatch(userActions.registerUserRequest());
 
     if (username) {
-        apiClient.post(api_urls.login, { username })
+        apiClient.post(api_urls.register, { username, email })
             .then(response => {
                 const data = response.data;
                 if (data.error) {
-                    dispatch(userActions.loginFailure(data.error));
+                    dispatch(userActions.registerUserFailure(data.error));
                 } else if(data && data.data) {
-                    dispatch(userActions.loginSuccess(data.data));
+                    dispatch(userActions.registerUserSuccess(data.data));
                 }
             })
             .catch(error => {
-                dispatch(userActions.loginFailure(error.message));
+                dispatch(userActions.registerUserFailure(error.message));
             });
     } else {
-        dispatch(userActions.loginFailure("Username is required"));
+        dispatch(userActions.registerUserFailure("Username is required"));
     }
 }
 

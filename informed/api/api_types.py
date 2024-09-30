@@ -13,16 +13,7 @@ from informed.db_models.users import (
     WeatherSensitivities,
 )
 
-
-class QuestionsRequest(BaseModel):
-    question: str
-
-
-class GetQuestionAndFactsResponse(BaseModel):
-    question: str
-    facts: list[str] | None = None
-    status: str
-    source: str | None = None
+from informed.db_models.query import QueryState, Query, QuerySource
 
 
 class CreateUserRequest(BaseModel):
@@ -98,7 +89,7 @@ class UserDetailsResponse(BaseModel):
 
 
 class HealthCondition(BaseModel):
-    id: int | None = None
+    id: UUID | None = None
     condition: str
     severity: str
     description: str
@@ -112,7 +103,7 @@ class Medication(BaseModel):
 
 
 class WeatherSensitivity(BaseModel):
-    id: int | None = None
+    id: UUID | None = None
     type: str
     description: str
 
@@ -215,3 +206,37 @@ class UserMedicalDetailsResponse(BaseModel):
             for sensitivity in user_medical_details.weather_sensitivities
         ]
         return cls.model_validate(medical_details)
+
+
+class UpdateQueryRequest(BaseModel):
+    query_id: UUID
+    state: QueryState
+
+
+class QuerySourceResponse(BaseModel):
+    source: str
+    description: str | None = None
+
+    @classmethod
+    def from_db(cls, query_source: QuerySource) -> "QuerySourceResponse":
+        return cls.model_validate(query_source, from_attributes=True)
+
+
+class QueryResponse(BaseModel):
+    query_id: UUID
+    user_id: UUID
+    query: str
+    state: str
+    sources: list[QuerySourceResponse]
+    findings: list[str]
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def from_db(cls, query: Query) -> "QueryResponse":
+        data = query.model_dump()
+        return cls.model_validate(data)
+
+
+class QueryRequest(BaseModel):
+    query: str

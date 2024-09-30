@@ -33,6 +33,7 @@ const AuthComponent = () => {
 
   const handleRegister = (registerDetails) => {
     console.log('Register Details:', registerDetails);
+    dispatch(userActions.registerUser({ ...registerDetails }))
     // Handle registration logic here
   };
 
@@ -49,7 +50,7 @@ const AuthComponent = () => {
                 <button className={styles.loginButton} onClick={handleOpenDialog}>Login</button>
             )}
         </div>
-    
+
         {
         isLoggedIn &&
             <div className={styles.loggedInMsg}><p>Welcome, {displayName}!</p></div>
@@ -108,7 +109,7 @@ const AuthComponent = () => {
 //     if(user && user.username) {
 //       onClose();
 //     }
-    
+
 //     return () => {
 //         // clearInterval(intervalID)
 //     };
@@ -117,14 +118,14 @@ const AuthComponent = () => {
 //   return (
 //     <div className={styles.modal}>
 //       <div className={styles.modalContent}>
-            
+
 //         <div className={styles.loginModalHeading}>
 //             <p>Enter User Details</p>
 //             <div className={styles.closeButtonContainer} onClick={onClose}>
 //                 x
 //             </div>
 //         </div>
-        
+
 //         <div className={styles.loginActionsContainer}>
 //           <div className={styles.loginFormContainer}>
 //             <div className={styles.userNameInputContainer}>
@@ -149,9 +150,9 @@ const AuthComponent = () => {
 //             <div className={styles.usernameSubmitContainer}>
 //                 <button className={styles.usernameSubmit} onClick={handleLogin}>Login</button>
 //             </div>
-            
+
 //         </div>
-        
+
 //       </div>
 //     </div>
 //   );
@@ -178,7 +179,7 @@ const AuthComponent = () => {
 //                 <button className={styles.loginButton} onClick={() => setShowModal(true)}>Login</button>
 //             )}
 //         </div>
-    
+
 //         {
 //         isLoggedIn &&
 //             <div className={styles.loggedInMsg}><p>Welcome, {displayName}!</p></div>

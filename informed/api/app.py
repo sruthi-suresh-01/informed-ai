@@ -9,12 +9,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger as log
 
-from informed.api.user_query_routes import user_query_router
-from informed.api.user_routes import user_router
-from informed.api.weather_data_routes import weather_router
+from informed.api.chat_query import chat_query_router
+from informed.api.user import user_router
+from informed.api.weather import weather_router
 from informed.config import Config
 from informed.db import init_db
 from informed.helper.utils import get_concise_exception_traceback
+from informed.informed import InformedManager
+import redis
 
 
 @asynccontextmanager
@@ -24,18 +26,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
         log.info("Initializing resources...")
         # Add any initialization code here
 
-        executor = ThreadPoolExecutor(max_workers=4)
-        app.state.executor = executor
-
         yield
-    finally:
-        # Shutdown logic
-        log.info("Shutting down resources...")
-        # Close the executor if it exists
+
+        await app.state.app_manager.cancel_all_tasks()
         if hasattr(app.state, "executor"):
             app.state.executor.shutdown(wait=True)
-            log.info("Executor has been shut down")
-        # Add any other cleanup code here
+        log.info("Executor has been shut down")
+    except Exception as e:
+        log.exception(e)
+        raise e
 
 
 def create_app(config: Config) -> FastAPI:
@@ -47,6 +46,15 @@ def create_app(config: Config) -> FastAPI:
     # app.mount("/files", StaticFiles(directory="static"), name="static")
     app.state.config = config
     app.state.version = os.getenv("APP_VERSION")
+
+    redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+    app.state.redis_client = redis_client
+
+    executor = ThreadPoolExecutor(max_workers=4)
+    app.state.executor = executor
+
+    app_manager = InformedManager(config)
+    app.state.app_manager = app_manager
 
     # Initialize the job scheduler
 
@@ -61,10 +69,9 @@ def create_app(config: Config) -> FastAPI:
 
     api_v1_router = APIRouter()
     api_v1_router.include_router(user_router, prefix="/user", tags=["users"])
-    api_v1_router.include_router(user_query_router, prefix="/query", tags=["query"])
+    api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
     api_v1_router.include_router(weather_router, prefix="/weather", tags=["weather"])
 
-    # TODO: Frontend needs to update api version in its path
     app.include_router(api_v1_router, prefix="/api/v1")
 
     app.add_exception_handler(HTTPException, http_exception_handler)

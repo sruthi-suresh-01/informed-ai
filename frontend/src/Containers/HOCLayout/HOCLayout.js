@@ -27,7 +27,7 @@ export const HOCLayout = React.memo(function HOCLayout(props) {
                     </div>
                 </div>
             </NotificationProvider>
-            
+
         </div>
     );
 })

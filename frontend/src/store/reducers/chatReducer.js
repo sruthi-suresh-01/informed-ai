@@ -10,13 +10,13 @@ const initialState = {
   messages: []
 };
 
-  
+
 function chatReducer(state = initialState, action) {
     switch (action.type) {
         case actionTypes.CHAT_USER_MESSAGE_REQUEST:
             return { ...state, isLoading: true, error: null };
         case actionTypes.CHAT_USER_MESSAGE_SUCCESS:
-            return { ...state, isLoading: false, waitingForResponse: true, messages: [...state.messages, { type: 'question', question: action.question, id: action.questionId }], error: null };
+            return { ...state, isLoading: false, waitingForResponse: true, messages: [...state.messages, { type: 'query', query: action.query, id: action.queryId }], error: null };
         case actionTypes.CHAT_USER_MESSAGE_FAILURE:
             return { ...state, isLoading: false, error: action.payload };
         case actionTypes.CHAT_AGENT_POLL_REQUEST:
@@ -24,7 +24,7 @@ function chatReducer(state = initialState, action) {
         case actionTypes.CHAT_AGENT_POLL_SUCCESS:
             let messages = state.messages
             if(state.waitingForResponse)
-                messages = [...messages, { type: 'response', facts: action.facts, questionId : action.questionId, source: action.source }]
+                messages = [...messages, { type: 'response', findings: action.findings, queryId : action.queryId, sources: action.sources }]
             return { ...state, isAgentRequestLoading: false, waitingForResponse: false, messages: messages, error: null };
         case actionTypes.CHAT_AGENT_POLL_FAILURE:
             return { ...state, isAgentRequestLoading: false, waitingForResponse: false, error: action.payload };
@@ -37,4 +37,3 @@ function chatReducer(state = initialState, action) {
 }
 
 export default chatReducer;
-  

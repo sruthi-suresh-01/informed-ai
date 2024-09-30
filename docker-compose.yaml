@@ -1,22 +1,5 @@
 version: '3.8'
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000" 
-    environment:
-      GPT_APIKEY: ${GPT_APIKEY}
-      GPT_MODEL_NAME: ${GPT_MODEL_NAME}
-      APP_ENV: ${APP_ENV}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_SERVER_NAME: ${DB_SERVER_NAME}
-      DB_PORT: ${DB_PORT}
-      DB_DATABASE_NAME: ${DB_DATABASE_NAME}
-      DB_URL: ${DB_URL}
-
   frontend:
     build:
       context: ./frontend
@@ -30,5 +13,3 @@ services:
       - "80:80"
     depends_on:
       - frontend
-      - backend
-

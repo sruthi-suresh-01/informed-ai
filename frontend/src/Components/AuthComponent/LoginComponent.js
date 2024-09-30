@@ -35,7 +35,7 @@
 //         '.MuiPaper-root': {
 //           maxHeight: '80vh', // Set your desired max height here
 //         },
-        
+
 //     }}
 //     >
 //       <DialogTitle>{isRegistering ? 'Register' : 'Login'}</DialogTitle>

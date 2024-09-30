@@ -44,7 +44,6 @@ const states = [
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
-
 const UserUpdate = ({ onChange }) => {
     const dispatch = useDispatch();
     const user = useSelector(state => state.user.user)

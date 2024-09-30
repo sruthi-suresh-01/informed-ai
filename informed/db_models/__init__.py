@@ -13,6 +13,8 @@ from .users import (
 )
 from .weather import WeatherData
 
+from .query import Query, QueryState, QuerySource
+
 __all__ = [
     # Base and utility classes
     "SQLModel",
@@ -29,4 +31,8 @@ __all__ = [
     "UserMedicalDetails",
     # Weather-related models
     "WeatherData",
+    # Query-related models
+    "Query",
+    "QueryState",
+    "QuerySource",
 ]

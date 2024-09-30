@@ -78,7 +78,7 @@ pyright:
 	$(call run_check, pyright, poetry run pyright)
 
 mypy:
-	$(call run_check, mypy, poetry run mypy informed backend)
+	$(call run_check, mypy, poetry run mypy informed)
 
 deptry:
 	$(call run_check, deptry, poetry run deptry . --extend-exclude ".*/node_modules/")

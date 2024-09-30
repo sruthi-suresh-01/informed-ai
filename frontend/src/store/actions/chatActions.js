@@ -4,8 +4,8 @@ export const chatUserMessageRequest = () => {
     return { type: actionTypes.CHAT_USER_MESSAGE_REQUEST };
 }
 
-export const chatUserMessageSuccess = ({ question, questionId }) => {
-    return { type: actionTypes.CHAT_USER_MESSAGE_SUCCESS, question, questionId };
+export const chatUserMessageSuccess = ({ query, queryId }) => {
+    return { type: actionTypes.CHAT_USER_MESSAGE_SUCCESS, query, queryId };
 }
 
 export const chatUserMessageFailure = (error) => {
@@ -24,4 +24,3 @@ export const chatAgentPollSuccess = (payload) => {
 export const chatAgentPollFailure = (error) => {
     return { type: actionTypes.CHAT_AGENT_POLL_FAILURE, payload: error };
 }
-

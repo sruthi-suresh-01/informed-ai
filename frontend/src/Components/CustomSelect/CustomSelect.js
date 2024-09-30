@@ -57,7 +57,7 @@ const customStyles = {
 
 export function CustomSelect(props) {
 
-    const { 
+    const {
         value,
         onChange,
         options,

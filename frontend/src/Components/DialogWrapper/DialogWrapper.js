@@ -3,7 +3,7 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, Button } from '@mui/
 
 const DialogWrapper = ({ open, onClose, title, children, onSave, actions }) => {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" 
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm"
         sx={{
             '.MuiDialogContent-root': {
             paddingTop: '20px !important',
@@ -11,7 +11,7 @@ const DialogWrapper = ({ open, onClose, title, children, onSave, actions }) => {
             '.MuiPaper-root': {
               maxHeight: '80vh', // Set your desired max height here
             },
-            
+
         }}
       >
       <DialogTitle>{title}</DialogTitle>
@@ -19,9 +19,9 @@ const DialogWrapper = ({ open, onClose, title, children, onSave, actions }) => {
         {children || <></>}
       </DialogContent>
       {
-        actions && Array.isArray(actions) && actions.length > 0 && 
+        actions && Array.isArray(actions) && actions.length > 0 &&
             <DialogActions>
-                { 
+                {
                     actions.map((action, idx) => {
                         return (<Button key={idx} onClick={action.invoke} color={action.type || "primary"}>
                             {action.text || ''}

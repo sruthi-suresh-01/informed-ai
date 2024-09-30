@@ -55,7 +55,7 @@ If you prefer to build the frontend and backend separately using Docker, perform
 
   ```bash
   docker-compose up -d
-  
+
   ```
 ### Manual Build (Without Docker)
 
@@ -98,5 +98,4 @@ For developers preferring to manually set up the project without Docker:
   docker buildx build --platform linux/amd64 -t <dockerhub_username>/<backend_project>:<tag> --push ./backend
   docker buildx build --platform linux/amd64 -t <dockerhub_username><nginx_project>:<tag> --push ./nginx
   ```
-- Execute the 'server_build.sh' file on your host to fetch he containers and start the application. 
-
+- Execute the 'server_build.sh' file on your host to fetch he containers and start the application.

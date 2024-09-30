@@ -29,7 +29,7 @@
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
   }
-  
+
   /* Modal content */
   .modalContent {
     background-color: #fefefe;
@@ -45,7 +45,7 @@
     border-radius: 5px;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
-  
+
   /* Close button */
   .close {
     color: #aaa;
@@ -53,7 +53,7 @@
     font-size: 18px;
     /* font-weight: bold; */
   }
-  
+
   .close:hover,
   .close:focus {
     color: black;
@@ -63,7 +63,7 @@
 
   .loginModalHeading {
     background: #008080;
-    color: white; 
+    color: white;
     height: 30%;
     height: 50px;
     justify-content: center;
@@ -98,7 +98,7 @@
 
 
 
-  
+
 
   .userNameCancel {
     color: black;
@@ -107,7 +107,7 @@
 
   .loginActionsContainer {
     position: relative;
-    
+
     height: 70%;
     display: flex;
     padding: 20px;

@@ -31,8 +31,6 @@ def downgrade_db(conn: Connection, revision: str = "base") -> None:
 
 
 class DatabaseEngine:
-    # TODO (peter): using contextvars allows us to run concurrent tests/evals
-    # but we should probably use dependency injection instead
     use_contextvars: bool = False
     _instance: AsyncEngine | None = None
     _instance_var: ContextVar[AsyncEngine | None] = ContextVar("db_engine")

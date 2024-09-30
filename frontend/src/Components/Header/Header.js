@@ -3,7 +3,7 @@ import styles from './Header.module.css';
 import AuthComponent from '../AuthComponent/AuthComponent';
 import Menu from './Menu';
 export function Header(props) {
-    
+
     return (
         <div className={styles.bannerContainer}>
             <Menu />
