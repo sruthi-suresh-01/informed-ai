@@ -107,20 +107,11 @@ async def register_user(
         )
 
 
-@user_router.post("/set-user-details/{username}")
+@user_router.post("/details")
 async def set_user_details(
-    username: str,
     details: UserDetailsRequest,
     current_user: User = Depends(get_current_user),
 ) -> dict:
-    if not current_user or (
-        current_user.username != username and current_user.account_type != "admin"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this user's details",
-        )
-
     async with session_maker() as session:
         # Check if the user exists
         user = current_user
@@ -175,22 +166,11 @@ async def set_user_details(
     return {"message": "User details updated successfully"}
 
 
-@user_router.get("/get-user-details/{username}")
+@user_router.get("/details")
 async def get_user_details(
-    username: str, current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> UserDetailsResponse:
 
-    if (
-        not current_user
-        or current_user.username != username
-        and current_user.account_type != "admin"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this user's details",
-        )
-
-    # Fetch user by username including details and languages
     user = current_user
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -202,53 +182,24 @@ async def get_user_details(
     return UserDetailsResponse.from_user_details(user.details)
 
 
-@user_router.get(
-    "/{username}/medical-details", response_model=UserMedicalDetailsResponse
-)
+@user_router.get("/medical-details", response_model=UserMedicalDetailsResponse)
 async def get_medical_details(
-    username: str, current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> UserMedicalDetailsResponse:
 
-    if (
-        not current_user
-        or current_user.username != username
-        and current_user.account_type != "admin"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this user's details",
-        )
-
     user = current_user
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
     if not user.medical_details:
         raise HTTPException(status_code=404, detail="Medical details not found")
 
     return UserMedicalDetailsResponse.from_user_medical_details(user.medical_details)
 
 
-@user_router.post("/{username}/medical-details")
+@user_router.post("/medical-details")
 async def set_medical_details(
-    username: str,
     details: UserMedicalDetailsRequest,
     current_user: User = Depends(get_current_user),
 ) -> dict:
-    if (
-        not current_user
-        or current_user.username != username
-        and current_user.account_type != "admin"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this user's details",
-        )
-
     user = current_user
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
     try:
         async with session_maker() as session:
             # Update or create medical details

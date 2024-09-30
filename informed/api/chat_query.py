@@ -25,7 +25,7 @@ processing_data: dict[str, Any] = {}
 lock = asyncio.Lock()
 
 
-@chat_query_router.post("/submit_question", response_model=QueryResponse)
+@chat_query_router.post("/", response_model=QueryResponse)
 async def submit_question(
     request: Request,
     query_request: QueryRequest,
@@ -60,7 +60,7 @@ async def start_query(
     return query
 
 
-@chat_query_router.get("/get_question_and_facts", response_model=QueryResponse)
+@chat_query_router.get("/latest", response_model=QueryResponse)
 async def get_question_and_facts(
     request: Request,
     current_user: User = Depends(get_current_user),
