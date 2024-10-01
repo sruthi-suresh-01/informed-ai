@@ -12,7 +12,7 @@ from informed.db_models.users import User
 async def get_current_user(request: Request, session_token: str = Cookie(None)) -> User:
     redis_client = request.app.state.redis_client
 
-    serialized_session = redis_client.get(session_token)
+    serialized_session = await redis_client.get(session_token)
     if not serialized_session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

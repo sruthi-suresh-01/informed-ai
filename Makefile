@@ -84,6 +84,6 @@ deptry:
 	$(call run_check, deptry, poetry run deptry . --extend-exclude ".*/node_modules/")
 
 
-.PHONY: test-code-quality
-test-code-quality: ## 🚨 Run code quality tools.
+.PHONY: check
+check: ## 🚨 Run code quality tools.
 	@poetry run pre-commit run -a

@@ -15,8 +15,9 @@ Informed AI is designed to help users get personalized updates about the weather
    git git@github.com:rahulrajesh23/informed-ai.git project_name
    cd project_name
    ```
-3. **Install Redis**:
-  - Setup Redis Server (Will soon not be required)
+3. **~~Install Redis~~**:
+  - This step is no longer required. Please uninstall Redis if it is installed.
+
 4. **Environment Setup**:
    - Install Poetry
    - Run `make install`

@@ -14,9 +14,9 @@ from informed.api.user import user_router
 from informed.api.weather import weather_router
 from informed.config import Config
 from informed.db import init_db
+from informed.redis import init_redis_client
 from informed.helper.utils import get_concise_exception_traceback
 from informed.informed import InformedManager
-import redis
 
 
 @asynccontextmanager
@@ -40,14 +40,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
 def create_app(config: Config) -> FastAPI:
     # Initialize the database
     init_db(config.database_config)
+    redis_client = init_redis_client(config.redis_config)
     # Initialize the job scheduler
-    # app = FastAPI(lifespan=lifespan)
-    app = FastAPI()
+    app = FastAPI(lifespan=lifespan)
     # app.mount("/files", StaticFiles(directory="static"), name="static")
     app.state.config = config
     app.state.version = os.getenv("APP_VERSION")
 
-    redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
     app.state.redis_client = redis_client
 
     executor = ThreadPoolExecutor(max_workers=4)

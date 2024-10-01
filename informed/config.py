@@ -49,10 +49,6 @@ class UIConfig(SafeDumpableModel):
     web_url: str = Field(default="http://localhost:3000/", exclude=False)
 
 
-class AuthConfig(SafeDumpableModel):
-    auth_mode: Literal["SUPERUSER", "FULL"] = Field(default="FULL", exclude=False)
-
-
 class LoggingConfig(SafeDumpableModel):
     level: str = "DEBUG"
     enable_console: bool = False
@@ -75,6 +71,13 @@ class DatabaseConfig(SafeDumpableModel):
         return self
 
 
+class RedisConfig(SafeDumpableModel):
+    host: str = Field(default="localhost", exclude=False)
+    port: int = Field(default=6379, exclude=False)
+    db: int = Field(default=0, exclude=False)
+    decode_responses: bool = Field(default=True, exclude=False)
+
+
 class Config(SafeDumpableModel, BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env", ".env.overrides"),
@@ -85,12 +88,12 @@ class Config(SafeDumpableModel, BaseSettings):
 
     service_name: str = "informed-core"
     database_config: DatabaseConfig
+    redis_config: RedisConfig = RedisConfig()
     telemetry_config: TelemetryConfig = TelemetryConfig()
 
     ui_config: UIConfig = UIConfig()
     cache_timestamps: bool = Field(default=False, exclude=False)
     logging_config: LoggingConfig = LoggingConfig()
-    auth_config: AuthConfig
 
     @classmethod
     def from_env(cls) -> "Config":

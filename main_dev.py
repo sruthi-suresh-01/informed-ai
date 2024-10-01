@@ -11,6 +11,8 @@ from loguru import logger as log
 from sqlalchemy import create_engine
 from testcontainers.core.image import DockerImage
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
+
 
 # import misc.scripts.app.create_default_scenario_toolkits as toolkit_script
 from informed.config import get_config
@@ -51,19 +53,6 @@ def run_ui():
 def start_server(db_connection_string: str) -> None:
     # Replace strtobool with ast.literal_eval
     start_ui_flag = bool(strtobool(os.environ.get("USER_START_UI", "true")))
-    enable_auth = bool(strtobool(os.environ.get("ENABLE_AUTH", "false")))
-
-    if enable_auth:
-        os.environ["AUTH_CONFIG__WORKOS_CONFIG__REDIRECT_URI"] = (
-            "http://localhost:3001/api/v1/auth/callback"
-        )
-        os.environ["AUTH_CONFIG__WORKOS_CONFIG__ORGANIZATION_ID"] = (
-            "org_01J2STQ7C69GYJZJMNB8D6MGGQ"
-        )
-    else:
-        os.environ["AUTH_CONFIG__AUTH_MODE"] = "SUPERUSER"
-        os.environ["AUTH_CONFIG__WORKOS_CONFIG__REDIRECT_URI"] = "dummy"
-        os.environ["AUTH_CONFIG__WORKOS_CONFIG__ORGANIZATION_ID"] = "dummy"
 
     _run_upgrade(db_connection_string)
     print(f"db_connection_string: {db_connection_string}")
@@ -117,21 +106,33 @@ if __name__ == "__main__":
     # If DATABASE_CONFIG__DB_URL is not provided, create a new DB
     if db_connection_string is None:
         try:
-            with DockerImage(path="misc/images/pgvector") as image, PostgresContainer(
-                "postgres:latest", driver="psycopg"
-            ).with_bind_ports(5432, 5432).with_env(
-                "POSTGRES_POSTGRES_PASSWORD", "password"
-            ).with_env(
-                "POSTGRES_INITSCRIPTS_PASSWORD", "password"
-            ).with_env(
-                "POSTGRES_INITSCRIPTS_USERNAME", "postgres"
-            ) as postgres:
+            with RedisContainer(image="redis:latest") as redis_container:
+                redis_container.start()
+                redis_host = redis_container.get_container_host_ip()
+                redis_port = redis_container.get_exposed_port(6379)
+                os.environ["REDIS_CONFIG__HOST"] = redis_host
+                os.environ["REDIS_CONFIG__PORT"] = redis_port
+                log.info("Redis container started on port {}", redis_port)
 
-                db_connection_string = postgres.get_connection_url()
-                os.environ["DATABASE_CONFIG__DB_URL"] = db_connection_string
-                start_server(db_connection_string)
+                with DockerImage(
+                    path="misc/images/pgvector"
+                ) as image, PostgresContainer(
+                    "postgres:latest", driver="psycopg"
+                ).with_bind_ports(
+                    5432, 5432
+                ).with_env(
+                    "POSTGRES_POSTGRES_PASSWORD", "password"
+                ).with_env(
+                    "POSTGRES_INITSCRIPTS_PASSWORD", "password"
+                ).with_env(
+                    "POSTGRES_INITSCRIPTS_USERNAME", "postgres"
+                ) as postgres:
+
+                    db_connection_string = postgres.get_connection_url()
+                    os.environ["DATABASE_CONFIG__DB_URL"] = db_connection_string
+                    start_server(db_connection_string)
         except Exception as e:
             log.error("Failed to start server: {}", str(e))
-            sys.exit(1)
+
     else:
         start_server(db_connection_string)

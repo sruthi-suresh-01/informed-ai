@@ -30,13 +30,13 @@ from informed.db_models.users import (
 user_router = APIRouter()
 
 
-def set_session_cookie(
+async def set_session_cookie(
     request: Request, response: Response, session_object: dict
 ) -> None:
     redis_client = request.app.state.redis_client
     session_token = secrets.token_urlsafe()
     serialized_session = json.dumps(session_object)
-    redis_client.set(session_token, serialized_session, ex=3600)
+    await redis_client.set(session_token, serialized_session, ex=3600)
     response.set_cookie(
         key="session_token",
         value=session_token,
@@ -78,7 +78,7 @@ async def register_user(
             try:
                 await session.commit()
                 session_object = {"username": user.username, "role": "admin"}
-                set_session_cookie(request, response, session_object)
+                await set_session_cookie(request, response, session_object)
                 return CreateUserRequest(
                     username=new_user.username, email=new_user.email
                 )
@@ -270,7 +270,7 @@ async def login(
             db_user = result.unique().scalar_one_or_none()
             if db_user:
                 session_object = {"username": login_request.username, "role": "admin"}
-                set_session_cookie(request, response, session_object)
+                await set_session_cookie(request, response, session_object)
                 return {"data": db_user, "message": "Login Successful"}
             else:
                 raise HTTPException(
@@ -299,7 +299,7 @@ async def logout(request: Request, response: Response) -> dict:
     session_token = request.cookies.get("session_token")
     redis_client = request.app.state.redis_client
     if session_token:
-        redis_client.delete(session_token)
+        await redis_client.delete(session_token)
         # response.delete_cookie("session_token")
         return {"message": "Logged out"}
     raise HTTPException(status_code=400, detail="No active session found")
