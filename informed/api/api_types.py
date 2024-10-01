@@ -11,6 +11,7 @@ from informed.db_models.users import (
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
+    User,
 )
 
 from informed.db_models.query import QueryState, Query, QuerySource
@@ -19,6 +20,33 @@ from informed.db_models.query import QueryState, Query, QuerySource
 class CreateUserRequest(BaseModel):
     username: str
     email: str
+
+
+class AuthenticatedUserResponse(BaseModel):
+    username: str
+    email: str
+
+    @classmethod
+    def from_user(cls, user: User) -> "AuthenticatedUserResponse":
+        data = user.model_dump()
+        return cls.model_validate(data, from_attributes=True)
+
+
+class SessionValidationResponse(BaseModel):
+    username: str | None = None
+    email: str | None = None
+    sessionAlive: bool
+
+    @classmethod
+    def from_user(
+        cls, user: User | None, sessionAlive: bool
+    ) -> "SessionValidationResponse":
+        if sessionAlive and user is not None:
+            data = user.model_dump()
+            data["sessionAlive"] = True
+            return cls.model_validate(data, from_attributes=True)
+        else:
+            return cls(sessionAlive=False)
 
 
 class LoginRequest(BaseModel):

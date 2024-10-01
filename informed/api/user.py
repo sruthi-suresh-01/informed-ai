@@ -15,6 +15,8 @@ from informed.api.api_types import (
     UserDetailsResponse,
     UserMedicalDetailsRequest,
     UserMedicalDetailsResponse,
+    AuthenticatedUserResponse,
+    SessionValidationResponse,
 )
 from informed.db import session_maker
 from informed.db_models.users import (
@@ -30,11 +32,10 @@ from informed.db_models.users import (
 user_router = APIRouter()
 
 
-async def set_session_cookie(
-    request: Request, response: Response, session_object: dict
-) -> None:
+async def set_session_cookie(request: Request, response: Response, user: User) -> None:
     redis_client = request.app.state.redis_client
     session_token = secrets.token_urlsafe()
+    session_object = {"username": user.username, "role": "admin"}
     serialized_session = json.dumps(session_object)
     await redis_client.set(session_token, serialized_session, ex=3600)
     response.set_cookie(
@@ -47,27 +48,15 @@ async def set_session_cookie(
 
 
 @user_router.post(
-    "/register", response_model=CreateUserRequest, status_code=status.HTTP_201_CREATED
+    "/register",
+    response_model=AuthenticatedUserResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def register_user(
     user: CreateUserRequest, request: Request, response: Response
-) -> CreateUserRequest:
+) -> AuthenticatedUserResponse:
     try:
         async with session_maker() as session:
-            # Check if user with the same username or email already exists
-            existing_user = await session.execute(
-                select(User).filter(
-                    cast(
-                        ColumnElement[bool],
-                        (User.username == user.username) | (User.email == user.email),
-                    )
-                )
-            )
-            if existing_user.scalar_one_or_none():
-                raise HTTPException(
-                    status_code=400, detail="Username or email already exists"
-                )
-
             new_user = User(
                 username=user.username,
                 email=user.email,
@@ -77,11 +66,8 @@ async def register_user(
             session.add(new_user)
             try:
                 await session.commit()
-                session_object = {"username": user.username, "role": "admin"}
-                await set_session_cookie(request, response, session_object)
-                return CreateUserRequest(
-                    username=new_user.username, email=new_user.email
-                )
+                await set_session_cookie(request, response, new_user)
+                return AuthenticatedUserResponse.from_user(new_user)
             except IntegrityError as ie:
                 await session.rollback()
                 if "users_email_key" in str(ie):
@@ -95,9 +81,6 @@ async def register_user(
                     raise HTTPException(
                         status_code=500, detail="An unexpected database error occurred"
                     )
-    except HTTPException as he:
-        # Re-raise HTTP exceptions
-        raise he
     except Exception as e:
         print(f"Unexpected error in register_user: {e!s}")
         print(f"Traceback: {traceback.format_exc()}")
@@ -105,6 +88,52 @@ async def register_user(
             status_code=500,
             detail="An unexpected error occurred while registering the user",
         )
+
+
+@user_router.post("/login", response_model=AuthenticatedUserResponse)
+async def login(
+    request: Request, login_request: LoginRequest, response: Response
+) -> AuthenticatedUserResponse:
+
+    try:
+        async with session_maker() as session:
+            result = await session.execute(
+                select(User).filter(
+                    cast(ColumnElement[bool], User.username == login_request.username)
+                )
+            )
+            db_user = result.unique().scalar_one_or_none()
+            if db_user:
+
+                await set_session_cookie(request, response, db_user)
+                return AuthenticatedUserResponse.from_user(db_user)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username"
+                )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
+
+
+@user_router.get("/logout")
+async def logout(request: Request, response: Response) -> dict:
+    session_token = request.cookies.get("session_token")
+    redis_client = request.app.state.redis_client
+    if session_token:
+        await redis_client.delete(session_token)
+        # response.delete_cookie("session_token")
+        return {"message": "Logged out"}
+    raise HTTPException(status_code=400, detail="No active session found")
+
+
+@user_router.get("/me")
+async def check_session_alive(
+    current_user: User = Depends(get_current_user),
+) -> SessionValidationResponse:
+    try:
+        return SessionValidationResponse.from_user(user=current_user, sessionAlive=True)
+    except Exception as e:
+        return SessionValidationResponse(sessionAlive=False)
 
 
 @user_router.post("/details")
@@ -253,53 +282,3 @@ async def set_medical_details(
         raise HTTPException(
             status_code=500, detail=f"An unexpected error occurred: {e!s}"
         )
-
-
-@user_router.post("/login")
-async def login(
-    request: Request, login_request: LoginRequest, response: Response
-) -> dict:
-
-    try:
-        async with session_maker() as session:
-            result = await session.execute(
-                select(User).filter(
-                    cast(ColumnElement[bool], User.username == login_request.username)
-                )
-            )
-            db_user = result.unique().scalar_one_or_none()
-            if db_user:
-                session_object = {"username": login_request.username, "role": "admin"}
-                await set_session_cookie(request, response, session_object)
-                return {"data": db_user, "message": "Login Successful"}
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username"
-                )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
-
-
-@user_router.get("/me")
-async def read_users_me(
-    request: Request, current_user: User = Depends(get_current_user)
-) -> dict:
-    try:
-        return {
-            "data": current_user,
-            "sessionAlive": True,
-            "message": "Login Successful",
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
-
-
-@user_router.get("/logout")
-async def logout(request: Request, response: Response) -> dict:
-    session_token = request.cookies.get("session_token")
-    redis_client = request.app.state.redis_client
-    if session_token:
-        await redis_client.delete(session_token)
-        # response.delete_cookie("session_token")
-        return {"message": "Logged out"}
-    raise HTTPException(status_code=400, detail="No active session found")

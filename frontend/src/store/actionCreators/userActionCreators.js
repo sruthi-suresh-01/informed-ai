@@ -5,6 +5,28 @@ import { Constants } from "../../Config/Constants";
 const api_urls = Constants.apis
 const userActions = actions.user
 
+
+export const registerUser = ({ username, email }) => dispatch => {
+    dispatch(userActions.registerUserRequest());
+
+    if (username) {
+        apiClient.post(api_urls.register, { username, email })
+            .then(response => {
+                const data = response.data;
+                if (data.error) {
+                    dispatch(userActions.registerUserFailure(data.error));
+                } else if(data) {
+                    dispatch(userActions.registerUserSuccess(data));
+                }
+            })
+            .catch(error => {
+                dispatch(userActions.registerUserFailure(error.message));
+            });
+    } else {
+        dispatch(userActions.registerUserFailure("Username is required"));
+    }
+}
+
 export const login = ({ username, password }) => dispatch => {
     dispatch(userActions.loginRequest());
 
@@ -14,8 +36,8 @@ export const login = ({ username, password }) => dispatch => {
                 const data = response.data;
                 if (data.error) {
                     dispatch(userActions.loginFailure(data.error));
-                } else if(data && data.data) {
-                    dispatch(userActions.loginSuccess(data.data));
+                } else if(data) {
+                    dispatch(userActions.loginSuccess(data));
                 }
             })
             .catch(error => {
@@ -53,33 +75,12 @@ export const verifyLogin = () => dispatch => {
             } else if(!data.sessionAlive){
                 dispatch(userActions.verifyLoginFailure("No Session found"));
             } else {
-            dispatch(userActions.verifyLoginSuccess(data.data));
+            dispatch(userActions.verifyLoginSuccess(data));
             }
         })
         .catch(error => {
             dispatch(userActions.verifyLoginFailure(error.message))
         });
-}
-
-export const registerUser = ({ username, email }) => dispatch => {
-    dispatch(userActions.registerUserRequest());
-
-    if (username) {
-        apiClient.post(api_urls.register, { username, email })
-            .then(response => {
-                const data = response.data;
-                if (data.error) {
-                    dispatch(userActions.registerUserFailure(data.error));
-                } else if(data && data.data) {
-                    dispatch(userActions.registerUserSuccess(data.data));
-                }
-            })
-            .catch(error => {
-                dispatch(userActions.registerUserFailure(error.message));
-            });
-    } else {
-        dispatch(userActions.registerUserFailure("Username is required"));
-    }
 }
 
 export const getUserDetails = ({ username }) => dispatch => {
