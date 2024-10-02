@@ -110,3 +110,10 @@ check_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = false
 show_error_codes = true
+
+
+[tool.pyright]
+include = ["informed"]
+exclude = ["**/__pycache__"]
+venvPath = "."
+venv = ".venv"

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
 
 from informed.helper.utils import get_current_user
-from informed.api.api_types import QueryRequest, QueryResponse
+from informed.api.schema import QueryRequest, QueryResponse
 from informed.db_models.users import (
     User,
 )

@@ -3,7 +3,7 @@ from uuid import UUID
 from informed.db import session_maker
 from sqlalchemy.sql import select, ColumnElement
 from typing import cast
-from informed.api.api_types import UpdateQueryRequest, QueryResponse
+from informed.api.schema import UpdateQueryRequest, QueryResponse
 
 
 class QueryManager:

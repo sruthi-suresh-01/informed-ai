@@ -29,6 +29,8 @@ class AuthenticatedUserResponse(BaseModel):
     @classmethod
     def from_user(cls, user: User) -> "AuthenticatedUserResponse":
         data = user.model_dump()
+        if user.details:
+            data["details"] = UserDetailsResponse.from_user_details(user.details)
         return cls.model_validate(data, from_attributes=True)
 
 

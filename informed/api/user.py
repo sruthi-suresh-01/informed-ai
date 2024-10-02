@@ -8,7 +8,7 @@ from sqlalchemy import ColumnElement, delete, select
 from sqlalchemy.exc import IntegrityError
 
 from informed.helper.utils import get_current_user
-from informed.api.api_types import (
+from informed.api.schema import (
     CreateUserRequest,
     LoginRequest,
     UserDetailsRequest,
@@ -121,7 +121,6 @@ async def logout(request: Request, response: Response) -> dict:
     redis_client = request.app.state.redis_client
     if session_token:
         await redis_client.delete(session_token)
-        # response.delete_cookie("session_token")
         return {"message": "Logged out"}
     raise HTTPException(status_code=400, detail="No active session found")
 

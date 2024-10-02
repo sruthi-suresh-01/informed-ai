@@ -1,7 +1,7 @@
 from informed.query.manager import QueryManager, UpdateQueryRequest
 from informed.config import Config
 from informed.db_models.query import Query, QueryState
-from informed.api.api_types import QueryResponse
+from informed.api.schema import QueryResponse
 from informed.agents.query_agent.query_agent import QueryAgent
 from uuid import UUID
 from loguru import logger as log

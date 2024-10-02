@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
-from informed.api.api_types import WeatherDataCreate, WeatherDataResponse
+from informed.api.schema import WeatherDataCreate, WeatherDataResponse
 from informed.db import session_maker
 from informed.db_models.weather import WeatherData
 

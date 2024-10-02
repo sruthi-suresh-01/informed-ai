@@ -11,8 +11,10 @@ db.sqlite3
 *.idea/
 *.vscode/
 *.bak
+*.venv
+*.mypy_cache
+*.ruff_cache
 
-/venv
 
 
 # React specific
@@ -24,19 +26,6 @@ db.sqlite3
 /frontend/yarn-error.log
 /frontend/yarn-debug.log
 
-# FastAPI specific
-/backend/__pycache__/
-/backend/*.py[cod]
-/backend/*$py.class
-/backend/.pytest_cache/
-/backend/.venv
-/backend/venv/
-/backend/env/
-/backend/informed-venv/
-/backend/.env.local
-/backend/.env.development.local
-/backend/.env.test.local
-/backend/.env.production.local
 
 # Nginx specific
 /nginx/logs/
