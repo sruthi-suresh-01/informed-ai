@@ -16,14 +16,11 @@ const initialUserDetails = {
     country: "",
     phone_number: "",
     ethnicity: "",
-    languages: [
-      { name: "spanish", is_preferred: false },
-      { name: "english", is_preferred: true }
-    ]
+    language: "english"
   }
 const languages =  [
-    { name: "spanish", is_preferred: false },
-    { name: "english", is_preferred: true }
+    { value: "spanish", label: "Spanish" },
+    { value: "english", label: "English" }
 ]
 
 const ethnicities = [
@@ -53,8 +50,8 @@ const UserUpdate = ({ onChange }) => {
     const [userDetails, setUserDetails] = useState(initialUserDetails);
 
     useEffect(() => {
-        if(isLoggedIn && user && user.username) {
-            dispatch(userActions.getUserDetails({ username: user.username}))
+        if(isLoggedIn && user && user.email) {
+            dispatch(userActions.getUserDetails({ email: user.email}))
         }
         return () => {
             // Cleanup on App unmount if needed
@@ -84,7 +81,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="First Name"
             name="first_name"
-            value={userDetails.first_name}
+            value={userDetails.first_name || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -93,7 +90,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="Last Name"
             name="last_name"
-            value={userDetails.last_name}
+            value={userDetails.last_name || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -103,7 +100,7 @@ const UserUpdate = ({ onChange }) => {
             label="Age"
             name="age"
             type="number"
-            value={userDetails.age}
+            value={userDetails.age || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -112,7 +109,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="Address Line 1"
             name="address_line1"
-            value={userDetails.address_line1}
+            value={userDetails.address_line1 || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -121,7 +118,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="Address Line 2"
             name="address_line2"
-            value={userDetails.address_line2}
+            value={userDetails.address_line2 || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -130,7 +127,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="City"
             name="city"
-            value={userDetails.city}
+            value={userDetails.city || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -140,7 +137,7 @@ const UserUpdate = ({ onChange }) => {
             select
             label="State"
             name="state"
-            value={userDetails.state}
+            value={userDetails.state || ''}
             onChange={handleChange}
             fullWidth
             >
@@ -155,7 +152,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="Zip Code"
             name="zip_code"
-            value={userDetails.zip_code}
+            value={userDetails.zip_code || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -164,7 +161,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="Country"
             name="country"
-            value={userDetails.country}
+            value={userDetails.country || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -173,7 +170,7 @@ const UserUpdate = ({ onChange }) => {
             <TextField
             label="Phone Number"
             name="phone_number"
-            value={userDetails.phone_number}
+            value={userDetails.phone_number || ''}
             onChange={handleChange}
             fullWidth
             />
@@ -183,7 +180,7 @@ const UserUpdate = ({ onChange }) => {
             select
             label="Ethnicity"
             name="ethnicity"
-            value={userDetails.ethnicity}
+            value={userDetails.ethnicity || ''}
             onChange={handleChange}
             fullWidth
             >
@@ -199,21 +196,18 @@ const UserUpdate = ({ onChange }) => {
             select
             label="Preferred Language"
             name="preferred_language"
-            value={userDetails.languages && userDetails.languages.find(lang => lang.is_preferred)?.name || ''}
+            value={userDetails.language || ''}
             onChange={(e) => {
                 const preferredLanguage = e.target.value;
-                const updatedLanguages = userDetails.languages && userDetails.languages.map(lang =>
-                ({ ...lang, is_preferred: lang.name === preferredLanguage })
-                );
-                const updatedUser = { ...userDetails, languages: updatedLanguages };
+                const updatedUser = { ...userDetails, language: preferredLanguage };
                 setUserDetails(updatedUser);
                 onChange(updatedUser);
             }}
             fullWidth
             >
             {languages.map((language, index) => (
-                <MenuItem key={index} value={language.name}>
-                {language.name}
+                <MenuItem key={index} value={language.value}>
+                {language.label}
                 </MenuItem>
             ))}
             </TextField>

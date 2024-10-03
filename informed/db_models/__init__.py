@@ -7,7 +7,6 @@ from .users import (
     Language,
     User,
     UserDetails,
-    UserLanguage,
     UserMedicalDetails,
 )
 from .weather import WeatherData
@@ -25,7 +24,6 @@ __all__ = [
     "User",
     "UserDetails",
     "Language",
-    "UserLanguage",
     "UserMedicalDetails",
     # Weather-related models
     "WeatherData",

@@ -6,38 +6,38 @@ const api_urls = Constants.apis
 const userActions = actions.user
 
 
-export const registerUser = ({ username, email }) => dispatch => {
+export const registerUser = ({ email, first_name, last_name }) => dispatch => {
     dispatch(userActions.registerUserRequest());
 
-    if (username) {
-        apiClient.post(api_urls.register, { username, email })
+    if (email) {
+        apiClient.post(api_urls.register, { email, first_name, last_name })
             .then(response => {
                 const data = response.data;
                 if (data.error) {
                     dispatch(userActions.registerUserFailure(data.error));
-                } else if(data) {
-                    dispatch(userActions.registerUserSuccess(data));
+                } else if(data && data.user) {
+                    dispatch(userActions.registerUserSuccess(data.user));
                 }
             })
             .catch(error => {
                 dispatch(userActions.registerUserFailure(error.message));
             });
     } else {
-        dispatch(userActions.registerUserFailure("Username is required"));
+        dispatch(userActions.registerUserFailure("Email is required"));
     }
 }
 
-export const login = ({ username, password }) => dispatch => {
+export const login = ({ email, password }) => dispatch => {
     dispatch(userActions.loginRequest());
 
-    if (username) {
-        apiClient.post(api_urls.login, { username })
+    if (email) {
+        apiClient.post(api_urls.login, { email })
             .then(response => {
                 const data = response.data;
                 if (data.error) {
                     dispatch(userActions.loginFailure(data.error));
-                } else if(data) {
-                    dispatch(userActions.loginSuccess(data));
+                } else if(data && data.user) {
+                    dispatch(userActions.loginSuccess(data.user));
                 }
             })
             .catch(error => {
@@ -70,12 +70,8 @@ export const verifyLogin = () => dispatch => {
     apiClient.get(api_urls.verifyLogin)
         .then(response => {
             const data = response.data
-            if (data.error) {
-            dispatch(userActions.verifyLoginFailure(data.error));
-            } else if(!data.sessionAlive){
-                dispatch(userActions.verifyLoginFailure("No Session found"));
-            } else {
-            dispatch(userActions.verifyLoginSuccess(data));
+            if(data && data.user) {
+                dispatch(userActions.verifyLoginSuccess(data.user));
             }
         })
         .catch(error => {
@@ -83,10 +79,10 @@ export const verifyLogin = () => dispatch => {
         });
 }
 
-export const getUserDetails = ({ username }) => dispatch => {
+export const getUserDetails = () => dispatch => {
     dispatch(userActions.getUserDetailsRequest());
 
-    apiClient.get(api_urls.getUserDetails.replace('{username}', username))
+    apiClient.get(api_urls.getUserDetails)
         .then(response => {
             const data = response.data
             console.log(data)
@@ -99,34 +95,30 @@ export const getUserDetails = ({ username }) => dispatch => {
         .catch(error => dispatch(userActions.getUserDetailsFailure(error.message)));
 }
 
-export const setUserDetails = ({ username, payload }) => dispatch => {
+export const setUserDetails = ({ payload }) => dispatch => {
     dispatch(userActions.setUserDetailsRequest());
 
-    if (username) {
-        apiClient.post(api_urls.setUserDetails.replace('{username}', username), payload)
-            .then(response => {
-                const data = response.data;
-                console.log(data)
-                if (data.error) {
-                    dispatch(userActions.setUserDetailsFailure(data.error));
-                } else if(data && data.data) {
-                    dispatch(userActions.setUserDetailsSuccess(data.data));
-                }
-            })
-            .catch(error => {
-                dispatch(userActions.setUserDetailsFailure(error.message));
-            });
-    } else {
-        dispatch(userActions.setUserDetailsFailure("Username is required"));
-    }
+    apiClient.post(api_urls.setUserDetails, payload)
+    .then(response => {
+        const data = response.data;
+        console.log(data)
+        if (data.error) {
+            dispatch(userActions.setUserDetailsFailure(data.error));
+        } else if(data && data.data) {
+            dispatch(userActions.setUserDetailsSuccess(data.data));
+        }
+    })
+    .catch(error => {
+        dispatch(userActions.setUserDetailsFailure(error.message));
+    });
 }
 
 // Update User Medical Details
 
-export const getUserMedicalDetails = ({ username }) => dispatch => {
+export const getUserMedicalDetails = () => dispatch => {
     dispatch(userActions.getUserMedicalDetailsRequest());
 
-    apiClient.get(api_urls.getUserMedicalDetails.replace('{username}', username))
+    apiClient.get(api_urls.getUserMedicalDetails)
         .then(response => {
             const data = response.data
             console.log(data)
@@ -139,24 +131,20 @@ export const getUserMedicalDetails = ({ username }) => dispatch => {
         .catch(error => dispatch(userActions.getUserMedicalDetailsFailure(error.message)));
 }
 
-export const setUserMedicalDetails = ({ username, payload }) => dispatch => {
+export const setUserMedicalDetails = ({ payload }) => dispatch => {
     dispatch(userActions.setUserMedicalDetailsRequest());
 
-    if (username) {
-        apiClient.post(api_urls.setUserMedicalDetails.replace('{username}', username), payload)
-            .then(response => {
-                const data = response.data;
-                console.log(data)
-                if (data.error) {
-                    dispatch(userActions.setUserMedicalDetailsFailure(data.error));
-                } else if(data && data.data) {
-                    dispatch(userActions.setUserMedicalDetailsSuccess(data.data));
-                }
-            })
-            .catch(error => {
-                dispatch(userActions.setUserMedicalDetailsFailure(error.message));
-            });
-    } else {
-        dispatch(userActions.setUserMedicalDetailsFailure("Username is required"));
-    }
+    apiClient.post(api_urls.setUserMedicalDetails, payload)
+    .then(response => {
+        const data = response.data;
+        console.log(data)
+        if (data.error) {
+            dispatch(userActions.setUserMedicalDetailsFailure(data.error));
+        } else if(data && data.data) {
+            dispatch(userActions.setUserMedicalDetailsSuccess(data.data));
+        }
+    })
+    .catch(error => {
+        dispatch(userActions.setUserMedicalDetailsFailure(error.message));
+    });
 }

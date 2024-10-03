@@ -17,13 +17,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Uuid as SQLAlchemyUuid
 from sqlmodel import Field, Relationship, SQLModel
+from typing import Any
 
 
 class User(SQLModel, table=True):
     __tablename__ = "users"  #  type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    username: str = Field(sa_column=Column(String(50), unique=True, nullable=False))
     email: str = Field(sa_column=Column(String(100), unique=True, nullable=False))
     is_active: bool = Field(sa_column=Column(Boolean))
     account_type: str = Field(sa_column=Column(String))
@@ -44,6 +44,12 @@ class User(SQLModel, table=True):
             passive_deletes="all",
         )
     )
+
+
+class Language(str, Enum):
+    ENGLISH = "english"
+    SPANISH = "spanish"
+    # Add more languages as needed
 
 
 class UserDetails(SQLModel, table=True):
@@ -72,45 +78,13 @@ class UserDetails(SQLModel, table=True):
     )
     phone_number: str | None = None
     ethnicity: str | None = None
-    languages: list["UserLanguage"] = Relationship(
-        sa_relationship=relationship(
-            "UserLanguage",
-            back_populates="user_details",
-            lazy="joined",  # Set lazy loading here
-            passive_deletes="all",
-        )
+    language: Language = Field(
+        default=Language.ENGLISH, sa_column=Column(SQLAlchemyEnum(Language))
     )
     user: "User" = Relationship(
         sa_relationship=relationship(
             "User",
             back_populates="details",
-            lazy="joined",  # Set lazy loading here
-        )
-    )
-
-
-class Language(str, Enum):
-    ENGLISH = "english"
-    SPANISH = "spanish"
-    # Add more languages as needed
-
-
-class UserLanguage(SQLModel, table=True):
-    __tablename__ = "user_languages"  #  type: ignore
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_details_id: UUID = Field(
-        sa_column=Column(
-            SQLAlchemyUuid(as_uuid=True),
-            ForeignKey("user_details.id", ondelete="CASCADE"),
-            nullable=False,
-        )
-    )
-    is_preferred: bool = Field(default=False, nullable=False)
-    name: Language = Field(sa_column=Column(SQLAlchemyEnum(Language)))
-    user_details: "UserDetails" = Relationship(
-        sa_relationship=relationship(
-            "UserDetails",
-            back_populates="languages",
             lazy="joined",  # Set lazy loading here
         )
     )
@@ -169,6 +143,15 @@ class UserMedicalDetails(SQLModel, table=True):
             passive_deletes="all",
         )
     )
+
+    @classmethod
+    def create(cls, **kwargs: Any) -> "UserMedicalDetails":
+        instance = cls(**kwargs)
+        instance.health_conditions = []
+        instance.medications = []
+        instance.allergies = []
+        instance.weather_sensitivities = []
+        return instance
 
 
 class UserHealthConditions(SQLModel, table=True):

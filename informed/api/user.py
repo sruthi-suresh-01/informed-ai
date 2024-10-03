@@ -16,14 +16,12 @@ from informed.api.schema import (
     UserMedicalDetailsRequest,
     UserMedicalDetailsResponse,
     AuthenticatedUserResponse,
-    SessionValidationResponse,
 )
 from informed.db import session_maker
 from informed.db_models.users import (
     User,
     UserDetails,
     UserHealthConditions,
-    UserLanguage,
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
@@ -35,7 +33,7 @@ user_router = APIRouter()
 async def set_session_cookie(request: Request, response: Response, user: User) -> None:
     redis_client = request.app.state.redis_client
     session_token = secrets.token_urlsafe()
-    session_object = {"username": user.username, "role": "admin"}
+    session_object = {"email": user.email, "role": "admin"}
     serialized_session = json.dumps(session_object)
     await redis_client.set(session_token, serialized_session, ex=3600)
     response.set_cookie(
@@ -58,13 +56,16 @@ async def register_user(
     try:
         async with session_maker() as session:
             new_user = User(
-                username=user.username,
                 email=user.email,
                 is_active=True,
                 account_type="user",
             )
-            new_user.details = None
-            new_user.medical_details = None
+            new_user.details = UserDetails(
+                user_id=new_user.id,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+            new_user.medical_details = UserMedicalDetails.create(user_id=new_user.id)
             session.add(new_user)
             try:
                 await session.commit()
@@ -74,10 +75,6 @@ async def register_user(
                 await session.rollback()
                 if "users_email_key" in str(ie):
                     raise HTTPException(status_code=400, detail="Email already exists")
-                elif "users_username_key" in str(ie):
-                    raise HTTPException(
-                        status_code=400, detail="Username already exists"
-                    )
                 else:
                     print(f"Unexpected IntegrityError: {ie!s}")
                     raise HTTPException(
@@ -101,7 +98,7 @@ async def login(
         async with session_maker() as session:
             result = await session.execute(
                 select(User).filter(
-                    cast(ColumnElement[bool], User.username == login_request.username)
+                    cast(ColumnElement[bool], User.email == login_request.email)
                 )
             )
             db_user = result.unique().scalar_one_or_none()
@@ -111,7 +108,7 @@ async def login(
                 return AuthenticatedUserResponse.from_user(db_user)
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email"
                 )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
@@ -130,11 +127,11 @@ async def logout(request: Request, response: Response) -> dict:
 @user_router.get("/me")
 async def check_session_alive(
     current_user: User = Depends(get_current_user),
-) -> SessionValidationResponse:
+) -> AuthenticatedUserResponse:
     try:
-        return SessionValidationResponse.from_user(user=current_user, sessionAlive=True)
+        return AuthenticatedUserResponse.from_user(user=current_user)
     except Exception as e:
-        return SessionValidationResponse(sessionAlive=False)
+        raise HTTPException(status_code=400, detail="No active session found")
 
 
 @user_router.post("/details")
@@ -168,20 +165,8 @@ async def set_user_details(
         user.details.country = details.country
         user.details.phone_number = details.phone_number
         user.details.ethnicity = details.ethnicity
+        user.details.language = details.language
         session.add(user.details)
-
-        # Clear existing languages
-        stmt = delete(UserLanguage).where(
-            cast(ColumnElement[bool], UserLanguage.user_details_id == user.details.id)
-        )
-        await session.execute(stmt)
-
-        # Add new languages
-        for lang in details.languages:
-            user_lang = UserLanguage(
-                user_details_id=user.details.id, **lang.model_dump()
-            )
-            session.add(user_lang)
 
         try:
             await session.commit()

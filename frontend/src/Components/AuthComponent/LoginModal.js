@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import styles from './LoginModal.module.css';
 const LoginModal = ({ onClose, onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
 
   const handleLogin = () => {
-    onLogin(username);
-    setUsername('');
+    onLogin(email);
+    setEmail('');
     onClose();
   };
 
@@ -15,9 +15,9 @@ const LoginModal = ({ onClose, onLogin }) => {
         <h2>Login</h2>
         <input
           type="text"
-          placeholder="Enter your username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
         <button onClick={handleLogin}>Login</button>
         <button onClick={onClose}>Cancel</button>
@@ -33,15 +33,15 @@ const LogoutButton = ({ onLogout }) => (
 const AuthComponent = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
 
-  const handleLogin = (username) => {
-    setUsername(username);
+  const handleLogin = (email) => {
+    setEmail(email);
     setIsLoggedIn(true);
   };
 
   const handleLogout = () => {
-    setUsername('');
+    setEmail('');
     setIsLoggedIn(false);
   };
 
@@ -49,7 +49,7 @@ const AuthComponent = () => {
     <div>
       {isLoggedIn ? (
         <div>
-          <span>Welcome, {username}!</span>
+          <span>Welcome, {email}!</span>
           <LogoutButton onLogout={handleLogout} />
         </div>
       ) : (

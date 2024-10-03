@@ -28,7 +28,7 @@ async def get_current_user(request: Request, session_token: str = Cookie(None)) 
             detail="Invalid session data format",
         )
 
-    if not session_object or not session_object.get("username"):
+    if not session_object or not session_object.get("email"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session data"
         )
@@ -36,7 +36,7 @@ async def get_current_user(request: Request, session_token: str = Cookie(None)) 
     try:
         async with session_maker() as session:
             result = await session.execute(
-                select(User).filter(User.username == session_object["username"])
+                select(User).filter(User.email == session_object["email"])
             )
             user = result.unique().scalar_one_or_none()
         if not user:

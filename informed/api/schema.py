@@ -7,7 +7,6 @@ from informed.db_models.users import (
     Language,
     UserDetails,
     UserHealthConditions,
-    UserLanguage,
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
@@ -18,36 +17,13 @@ from informed.db_models.query import QueryState, Query, QuerySource
 
 
 class CreateUserRequest(BaseModel):
-    username: str
     email: str
-
-
-class SessionValidationResponse(BaseModel):
-    username: str | None = None
-    email: str | None = None
-    sessionAlive: bool
-
-    @classmethod
-    def from_user(
-        cls, user: User | None, sessionAlive: bool
-    ) -> "SessionValidationResponse":
-        if sessionAlive and user is not None:
-            data = user.model_dump()
-            data["sessionAlive"] = True
-            return cls.model_validate(data, from_attributes=True)
-        else:
-            return cls(sessionAlive=False)
+    first_name: str
+    last_name: str
 
 
 class LoginRequest(BaseModel):
-    username: str
-
-
-class LanguageRequest(BaseModel):
-    name: str
-    is_preferred: bool = Field(
-        default=False, description="Indicates if the language is preferred"
-    )
+    email: str
 
 
 class UserDetailsRequest(BaseModel):
@@ -62,23 +38,7 @@ class UserDetailsRequest(BaseModel):
     country: str | None = None
     phone_number: str | None = None
     ethnicity: str | None = None
-    languages: list[LanguageRequest]
-
-    @field_validator("languages")
-    def must_contain_language(cls, v: list[LanguageRequest]) -> list[LanguageRequest]:
-        if not v:
-            raise ValueError("At least one language is required")
-        return v
-
-
-class UserLanguageResponse(BaseModel):
-    id: UUID
-    name: Language
-    is_preferred: bool
-
-    @classmethod
-    def from_db(cls, user_language: UserLanguage) -> "UserLanguageResponse":
-        return cls.model_validate(user_language, from_attributes=True)
+    language: Language = Language.ENGLISH
 
 
 class UserDetailsResponse(BaseModel):
@@ -94,31 +54,34 @@ class UserDetailsResponse(BaseModel):
     country: str | None = None
     phone_number: str | None = None
     ethnicity: str | None = None
-    languages: list[UserLanguageResponse] = []
+    language: Language = Language.ENGLISH
 
     @classmethod
     def from_user_details(cls, user_details: UserDetails) -> "UserDetailsResponse":
         details = user_details.model_dump(mode="json")
-        details["languages"] = [
-            UserLanguageResponse.from_db(language)
-            for language in user_details.languages
-        ]
         return cls.model_validate(details)
 
 
-class AuthenticatedUserResponse(BaseModel):
-    username: str
+class UserResponse(BaseModel):
     email: str
     account_type: str | None
     is_active: bool | None
     details: UserDetailsResponse | None = None
 
     @classmethod
-    def from_user(cls, user: User) -> "AuthenticatedUserResponse":
+    def from_user(cls, user: User) -> "UserResponse":
         data = user.model_dump()
         if user.details:
             data["details"] = UserDetailsResponse.from_user_details(user.details)
+        return cls.model_validate(data, from_attributes=True)
 
+
+class AuthenticatedUserResponse(BaseModel):
+    user: UserResponse
+
+    @classmethod
+    def from_user(cls, user: User) -> "AuthenticatedUserResponse":
+        data = {"user": UserResponse.from_user(user)}
         return cls.model_validate(data, from_attributes=True)
 
 

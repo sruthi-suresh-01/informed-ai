@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from informed.config import ENV_VARS
-from informed.db_models.users import UserDetails, User, UserLanguage
+from informed.db_models.users import User
 import os
 
 APP_ENV = os.getenv("APP_ENV", "DEV")
@@ -21,16 +21,11 @@ zone_zip_map = {
 }
 
 
-def get_first_preferred_language(user_details: UserDetails) -> UserLanguage | None:
-    # This finds the first preferred language or returns None if none are found
-    return next((ul for ul in user_details.languages if ul.is_preferred), None)
-
-
 def extract_user_info(user: User) -> str:
     user_info = ""
     if user and user.details:
         user_info += "User Details:\n"
-        preferred_language = get_first_preferred_language(user.details)
+        preferred_language = user.details.language
         if preferred_language and preferred_language.name:
             user_info += f"Preferred Language: {preferred_language.name}; "
         user_info += f"Age: {user.details.age};"

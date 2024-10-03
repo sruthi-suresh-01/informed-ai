@@ -3,8 +3,8 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, G
 
 const LoginDialog = ({ open, onClose, onLogin, onRegister }) => {
   const [isRegistering, setIsRegistering] = useState(false);
-  const [loginDetails, setLoginDetails] = useState({ username: '', password: '' });
-  const [registerDetails, setRegisterDetails] = useState({ username: '', email: '', password: '', confirmPassword: '' });
+  const [loginDetails, setLoginDetails] = useState({ email: '', password: '' });
+  const [registerDetails, setRegisterDetails] = useState({ first_name: '', last_name: '', email: '', password: '', confirmPassword: '' });
 
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
@@ -18,13 +18,14 @@ const LoginDialog = ({ open, onClose, onLogin, onRegister }) => {
 
   const handleLogin = () => {
     onLogin(loginDetails);
-    setLoginDetails({ username: '', password: '' })
+    setLoginDetails({ email: '', password: '' })
     onClose();
   };
 
   const handleRegister = () => {
     onRegister(registerDetails);
-    setLoginDetails({ username: '', password: '' })
+    setLoginDetails({ email: '', password: '' })
+    setRegisterDetails({ first_name: '', last_name: '', email: '', password: '', confirmPassword: '' })
     onClose();
   };
 
@@ -46,9 +47,18 @@ const LoginDialog = ({ open, onClose, onLogin, onRegister }) => {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
-                label="Username"
-                name="username"
-                value={registerDetails.username}
+                label="First Name"
+                name="first_name"
+                value={registerDetails.first_name}
+                onChange={handleRegisterChange}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Last Name"
+                name="last_name"
+                value={registerDetails.last_name}
                 onChange={handleRegisterChange}
                 fullWidth
               />
@@ -87,9 +97,9 @@ const LoginDialog = ({ open, onClose, onLogin, onRegister }) => {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
-                label="Username"
-                name="username"
-                value={loginDetails.username}
+                label="Email"
+                name="email"
+                value={loginDetails.email}
                 onChange={handleLoginChange}
                 fullWidth
               />

@@ -38,8 +38,8 @@ const HealthUpdate = ({ onChange }) => {
   const [health, setHealth] = useState(initialHealthDetails);
 
   useEffect(() => {
-    if(isLoggedIn && user && user.username) {
-        dispatch(userActions.getUserMedicalDetails({ username: user.username}))
+    if(isLoggedIn && user && user.email) {
+        dispatch(userActions.getUserMedicalDetails({ email: user.email}))
     }
     return () => {
         // Cleanup on App unmount if needed
@@ -116,7 +116,7 @@ const HealthUpdate = ({ onChange }) => {
           select
           label="Blood Type"
           name="blood_type"
-          value={health.blood_type}
+          value={health.blood_type || ''}
           onChange={handleChange}
           fullWidth
         >
@@ -132,7 +132,7 @@ const HealthUpdate = ({ onChange }) => {
           label="Height (cm)"
           name="height"
           type="number"
-          value={health.height}
+          value={health.height || ''}
           onChange={handleChange}
           fullWidth
         />
@@ -142,7 +142,7 @@ const HealthUpdate = ({ onChange }) => {
           label="Weight (kg)"
           name="weight"
           type="number"
-          value={health.weight}
+          value={health.weight || ''}
           onChange={handleChange}
           fullWidth
         />
@@ -163,7 +163,7 @@ const HealthUpdate = ({ onChange }) => {
                 select
                 label="Type"
                 name="type"
-                value={sensitivity.type}
+                value={sensitivity.type || ''}
                 onChange={(e) => handleSensitivityChange(index, 'type', e.target.value)}
                 fullWidth
               >
@@ -178,7 +178,7 @@ const HealthUpdate = ({ onChange }) => {
               <TextField
                 label="Description"
                 name="description"
-                value={sensitivity.description}
+                value={sensitivity.description || ''}
                 onChange={(e) => handleSensitivityChange(index, 'description', e.target.value)}
                 fullWidth
                 multiline
@@ -206,7 +206,7 @@ const HealthUpdate = ({ onChange }) => {
               <TextField
                 label="Condition"
                 name="condition"
-                value={condition.condition}
+                value={condition.condition || ''}
                 onChange={(e) => handleConditionChange(index, 'condition', e.target.value)}
                 fullWidth
               />
@@ -216,7 +216,7 @@ const HealthUpdate = ({ onChange }) => {
                 select
                 label="Severity"
                 name="severity"
-                value={condition.severity}
+                value={condition.severity || ''}
                 onChange={(e) => handleConditionChange(index, 'severity', e.target.value)}
                 fullWidth
               >
@@ -231,7 +231,7 @@ const HealthUpdate = ({ onChange }) => {
               <TextField
                 label="Description"
                 name="description"
-                value={condition.description}
+                value={condition.description || ''}
                 onChange={(e) => handleConditionChange(index, 'description', e.target.value)}
                 fullWidth
                 multiline

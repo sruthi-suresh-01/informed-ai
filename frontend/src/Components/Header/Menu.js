@@ -73,9 +73,6 @@ export function Menu(props) {
     }, [selectedMenuItem]);
 
     useEffect(() => {
-        // if(isLoggedIn && user && user.username) {
-        //     dispatch(userActions.getUserDetails({ username: user.username}))
-        // }
         return () => {
             // Cleanup on App unmount if needed
             setDialogFormState(initialDialogFormState)
@@ -95,10 +92,10 @@ export function Menu(props) {
     const handleOnSave = () => {
         switch(selectedMenuItem) {
             case "profile":
-                dispatch(userActions.setUserDetails({ username: user.username, payload: dialogFormState[selectedMenuItem]}))
+                dispatch(userActions.setUserDetails({ payload: dialogFormState[selectedMenuItem]}))
                 break;
             case 'health_details':
-                dispatch(userActions.setUserMedicalDetails({ username: user.username, payload: dialogFormState[selectedMenuItem]}))
+                dispatch(userActions.setUserMedicalDetails({ payload: dialogFormState[selectedMenuItem]}))
                 break
 
         }
