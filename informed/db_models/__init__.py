@@ -4,7 +4,6 @@ from .shared_types import EnumAsString, JSONBFromPydantic
 
 # If you have any utility functions or classes, import them here
 from .users import (
-    Activity,
     Language,
     User,
     UserDetails,
@@ -27,7 +26,6 @@ __all__ = [
     "UserDetails",
     "Language",
     "UserLanguage",
-    "Activity",
     "UserMedicalDetails",
     # Weather-related models
     "WeatherData",

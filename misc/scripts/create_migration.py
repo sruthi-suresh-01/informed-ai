@@ -23,10 +23,6 @@ if __name__ == "__main__":
 
     with PostgresContainer("postgres:latest", driver="psycopg").with_bind_ports(
         5432, 5432
-    ).with_env("POSTGRES_POSTGRES_PASSWORD", "password").with_env(
-        "POSTGRES_INITSCRIPTS_PASSWORD", "password"
-    ).with_env(
-        "POSTGRES_INITSCRIPTS_USERNAME", "postgres"
     ) as postgres:
         connection_string = postgres.get_connection_url()
         os.environ["DB_URL"] = connection_string

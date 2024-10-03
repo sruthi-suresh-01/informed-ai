@@ -36,44 +36,12 @@ class User(SQLModel, table=True):
             passive_deletes="all",
         )
     )
-    activities: list["Activity"] = Relationship(
-        sa_relationship=relationship(
-            "Activity",
-            back_populates="user",
-            lazy="joined",  # Set lazy loading here
-            passive_deletes="all",
-        )
-    )
     medical_details: Optional["UserMedicalDetails"] = Relationship(
         sa_relationship=relationship(
             "UserMedicalDetails",
             back_populates="user",
             lazy="joined",  # Set lazy loading here
             passive_deletes="all",
-        )
-    )
-
-
-class Activity(SQLModel, table=True):
-    __tablename__ = "activities"  #  type: ignore
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(
-        sa_column=Column(
-            SQLAlchemyUuid(as_uuid=True),
-            ForeignKey("users.id", ondelete="CASCADE"),
-            nullable=False,
-        )
-    )
-    type: str = Field(sa_column=Column(String(50)))
-    description: str = Field(sa_column=Column(Text))
-    date: datetime = Field(sa_column=Column(DateTime))
-    duration: int
-    location: str | None = Field(sa_column=Column(String(100)))
-    user: "User" = Relationship(
-        sa_relationship=relationship(
-            "User",
-            back_populates="activities",
-            lazy="joined",  # Set lazy loading here
         )
     )
 

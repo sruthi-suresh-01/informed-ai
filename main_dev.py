@@ -114,19 +114,9 @@ if __name__ == "__main__":
                 os.environ["REDIS_CONFIG__PORT"] = redis_port
                 log.info("Redis container started on port {}", redis_port)
 
-                with DockerImage(
-                    path="misc/images/pgvector"
-                ) as image, PostgresContainer(
+                with PostgresContainer(
                     "postgres:latest", driver="psycopg"
-                ).with_bind_ports(
-                    5432, 5432
-                ).with_env(
-                    "POSTGRES_POSTGRES_PASSWORD", "password"
-                ).with_env(
-                    "POSTGRES_INITSCRIPTS_PASSWORD", "password"
-                ).with_env(
-                    "POSTGRES_INITSCRIPTS_USERNAME", "postgres"
-                ) as postgres:
+                ).with_bind_ports(5432, 5432) as postgres:
 
                     db_connection_string = postgres.get_connection_url()
                     os.environ["DATABASE_CONFIG__DB_URL"] = db_connection_string

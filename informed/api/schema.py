@@ -22,18 +22,6 @@ class CreateUserRequest(BaseModel):
     email: str
 
 
-class AuthenticatedUserResponse(BaseModel):
-    username: str
-    email: str
-
-    @classmethod
-    def from_user(cls, user: User) -> "AuthenticatedUserResponse":
-        data = user.model_dump()
-        if user.details:
-            data["details"] = UserDetailsResponse.from_user_details(user.details)
-        return cls.model_validate(data, from_attributes=True)
-
-
 class SessionValidationResponse(BaseModel):
     username: str | None = None
     email: str | None = None
@@ -116,6 +104,22 @@ class UserDetailsResponse(BaseModel):
             for language in user_details.languages
         ]
         return cls.model_validate(details)
+
+
+class AuthenticatedUserResponse(BaseModel):
+    username: str
+    email: str
+    account_type: str | None
+    is_active: bool | None
+    details: UserDetailsResponse | None = None
+
+    @classmethod
+    def from_user(cls, user: User) -> "AuthenticatedUserResponse":
+        data = user.model_dump()
+        if user.details:
+            data["details"] = UserDetailsResponse.from_user_details(user.details)
+
+        return cls.model_validate(data, from_attributes=True)
 
 
 class HealthCondition(BaseModel):

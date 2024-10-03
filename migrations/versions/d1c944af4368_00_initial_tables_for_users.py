@@ -47,18 +47,6 @@ def upgrade() -> None:
         op.f("ix_weather_data_zip_code"), "weather_data", ["zip_code"], unique=False
     )
     op.create_table(
-        "activities",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
-        sa.Column("type", sa.String(length=50), nullable=True),
-        sa.Column("description", sa.Text(), nullable=True),
-        sa.Column("date", sa.DateTime(), nullable=True),
-        sa.Column("duration", sa.Integer(), nullable=False),
-        sa.Column("location", sa.String(length=100), nullable=True),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
         "user_details",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("user_id", sa.Uuid(), nullable=False),
@@ -159,7 +147,6 @@ def downgrade() -> None:
     op.drop_table("user_allergies")
     op.drop_table("user_medical_details")
     op.drop_table("user_details")
-    op.drop_table("activities")
     op.drop_index(op.f("ix_weather_data_zip_code"), table_name="weather_data")
     op.drop_table("weather_data")
     op.drop_table("users")

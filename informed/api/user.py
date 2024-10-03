@@ -63,6 +63,8 @@ async def register_user(
                 is_active=True,
                 account_type="user",
             )
+            new_user.details = None
+            new_user.medical_details = None
             session.add(new_user)
             try:
                 await session.commit()
