@@ -7,6 +7,7 @@ from informed.db_models.query import QuerySource
 from informed.llm.llm import getLLMResponse
 from informed.config import ENV_VARS
 from informed.llm.schema import build_function_schema
+from loguru import logger as log
 
 
 class GeneratedResponse(BaseModel):
@@ -84,7 +85,7 @@ async def generate_response(
     weather_data: dict[str, Any] = {},
     user_info: str = "",
 ) -> GeneratedResponse:
-
+    log.info(f"Generating response for query: {query}")
     # Create a comprehensive weather context
     context = ""
     if weather_data:

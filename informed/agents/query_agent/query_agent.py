@@ -37,6 +37,7 @@ class QueryAgent:
                 select(User).filter(cast(ColumnElement[bool], User.id == query.user_id))
             )
             user = result.unique().scalar_one_or_none()
+            log.info(f"Finding user: {user}")
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -46,6 +47,7 @@ class QueryAgent:
             async with session_maker() as session:
                 # TODO: fetch weather data instead of relying on db
                 weather_api_key = ENV_VARS["WEATHER_API_KEY"]
+                log.info(f"Fetching weather data for zip code: {user.details.zip_code}")
                 weather_api_url = f"https://api.weatherapi.com/v1/forecast.json?key={weather_api_key}&q={user.details.zip_code}&days=1&aqi=yes&alerts=yes"
                 async with httpx.AsyncClient() as client:
                     response = await client.get(weather_api_url)
@@ -116,6 +118,8 @@ class QueryAgent:
                     query.state = QueryState.FAILED
                     await self.query_manager.persist_query(query)
                     raise e
+        else:
+            log.warning("User details not found")
 
     async def _process_query(
         self, query: Query, user: User, weather_data: dict[str, Any]
