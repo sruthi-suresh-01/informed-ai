@@ -8,7 +8,7 @@ from informed.logger.logger import setup_logger
 
 def create_default_app(config: Config | None = None) -> FastAPI:
     config = config or get_config(print_config=True)
-    setup_logger(config)
+    # setup_logger(config)
     app = create_app(config)
     return app
 

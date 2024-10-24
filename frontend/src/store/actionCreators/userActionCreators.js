@@ -80,7 +80,7 @@ export const verifyLogin = () => dispatch => {
 }
 
 export const getUserDetails = () => dispatch => {
-    dispatch(userActions.getUserDetailsRequest());
+    // dispatch(userActions.getUserDetailsRequest());
 
     apiClient.get(api_urls.getUserDetails)
         .then(response => {

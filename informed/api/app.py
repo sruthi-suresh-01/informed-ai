@@ -12,6 +12,7 @@ from loguru import logger as log
 from informed.api.chat_query import chat_query_router
 from informed.api.user import user_router
 from informed.api.weather import weather_router
+from informed.api.health import router as health_router
 from informed.config import Config
 from informed.db import init_db
 from informed.redis import init_redis_client
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
 
 
 def create_app(config: Config) -> FastAPI:
+    log.info("Creating app...")
     # Initialize the database
     init_db(config.database_config)
     redis_client = init_redis_client(config.redis_config)
@@ -70,6 +72,7 @@ def create_app(config: Config) -> FastAPI:
     api_v1_router.include_router(user_router, prefix="/user", tags=["users"])
     api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
     api_v1_router.include_router(weather_router, prefix="/weather", tags=["weather"])
+    api_v1_router.include_router(health_router, prefix="/health", tags=["health"])
 
     app.include_router(api_v1_router, prefix="/api/v1")
 

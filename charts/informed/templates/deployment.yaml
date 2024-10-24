@@ -1,0 +1,161 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "informed-core.fullname" . }}-core
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.core.deploymentAnnotations }}
+  annotations:
+    {{ toYaml .Values.core.deploymentAnnotations  | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "informed-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+    {{- if .Values.core.deploymentLabels }}
+    {{ toYaml .Values.core.deploymentLabels  | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "informed-core.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: core
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.core.podAnnotations }}
+        {{ toYaml .Values.core.podAnnotations  | nindent 8 }}
+        {{- end }}
+        timestamp: {{ now | date "2006-01-02T15:04:05" }}
+      labels:
+        {{- include "informed-core.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: core
+        {{- if .Values.core.podLabels }}
+        {{ toYaml .Values.core.podLabels  | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.image.pullSecretName }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecretName }}
+      {{- end }}
+      serviceAccountName: {{ include "informed-core.serviceAccountName" . }}
+      initContainers:
+        - name: migrate
+          image: "{{ .Values.core.image.name }}:{{ .Values.core.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [ "sh", "-c", "alembic upgrade head" ]
+          env:
+            - name: DB_URL
+            {{- include "dbUrl" . | indent 14 }}
+            - name: DATABASE_CONFIG__DB_URL
+              {{- include "dbUrl" . | indent 14 }}
+      containers:
+        - name: {{ .Chart.Name }}-core
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.core.image.name }}:{{ .Values.core.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: UI_CONFIG__WEB_URL
+              value: https://{{ .Values.hostname }}/
+            - name: INSTANCE_NAME
+              value: {{ .Values.hostname }}
+          {{- range .Values.core.extraEnvs }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+          {{- end }}
+            - name: DATABASE_CONFIG__DB_URL
+              {{- include "dbUrl" . | indent 14 }}
+            - name: REDIS_CONFIG__HOST
+              value: {{ include "informed-core.fullname" . }}-redis
+            - name: REDIS_CONFIG__PORT
+              value: "6379"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.core.containerPort }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.core.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: {{ .Values.service.core.containerPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health/live
+              port: {{ .Values.service.core.containerPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "informed-core.fullname" . }}-ui
+  namespace: {{ .Release.Namespace }}
+  {{- if .Values.ui.deploymentAnnotations }}
+  annotations:
+    {{ toYaml .Values.ui.deploymentAnnotations  | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "informed-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+    {{- if .Values.ui.deploymentLabels }}
+    {{ toYaml .Values.ui.deploymentLabels  | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "informed-core.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ui
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.ui.podAnnotations }}
+        {{ toYaml .Values.ui.podAnnotations  | nindent 8 }}
+        {{- end }}
+        timestamp: {{ now | date "2006-01-02T15:04:05" }}
+      labels:
+        {{- include "informed-core.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ui
+        {{- if .Values.ui.podLabels }}
+        {{ toYaml .Values.ui.podLabels  | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.image.pullSecretName }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecretName }}
+      {{- end }}
+      serviceAccountName: {{ include "informed-core.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}-ui
+          image: "{{ .Values.ui.image.name }}:{{ .Values.ui.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.ui.containerPort }}
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 32Mi
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - '-c'
+                  - sleep 5 && /usr/sbin/nginx -s quit
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.ui.containerPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.ui.containerPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 20

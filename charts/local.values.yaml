@@ -1,0 +1,33 @@
+core:
+  extraEnvs:
+
+  resources:
+    requests:
+      memory: 500Mi
+    limits:
+      memory: 2Gi
+
+image:
+  pullSecretName:
+  pullPolicy: Never
+
+
+debugDeployment:
+  enabled: true
+
+postgresql:
+  enabled: true
+  image:
+    pullSecrets:
+    pullPolicy: Never # To let minikube use the local image
+
+traefik:
+  enabled: true
+
+hostname: local.app.informed.com
+
+ingress:
+  enabled: true
+
+localCerts:
+  enabled: true

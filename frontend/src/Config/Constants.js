@@ -1,14 +1,14 @@
 export const Constants = {
     "apis" : {
-        "submit" : "query/",
-        "generateResponse" : "query/latest",
-        "register" : "user/register",
-        "login" : "user/login",
-        "logout" : "user/logout",
-        "verifyLogin" : "user/me",
-        "getUserDetails": "user/details/",
-        "setUserDetails": "user/details/",
-        "getUserMedicalDetails": "user/medical-details",
-        "setUserMedicalDetails": "user/medical-details",
+        "submit" : "api/v1/query/",
+        "generateResponse" : "api/v1/query/latest",
+        "register" : "api/v1/user/register",
+        "login" : "api/v1/user/login",
+        "logout" : "api/v1/user/logout",
+        "verifyLogin" : "api/v1/user/me",
+        "getUserDetails": "api/v1/user/details/",
+        "setUserDetails": "api/v1/user/details/",
+        "getUserMedicalDetails": "api/v1/user/medical-details",
+        "setUserMedicalDetails": "api/v1/user/medical-details",
     }
 }

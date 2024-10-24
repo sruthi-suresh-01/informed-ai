@@ -1,0 +1,51 @@
+postgresql:
+  enabled: true
+  auth:
+    username: db_username
+    password: db_password
+    database: postgres
+    postgresPassword: password
+
+global:
+  postgresql:
+    auth:
+      username: db_username
+      password: db_password
+      database: postgres
+      postgresPassword: password
+    host: postgres
+    # host: 34.118.239.95
+    port: 5432
+
+core:
+  image:
+    name: gcr.io/informed-436823/informed-core
+  extraEnvs:
+    - name: DATABASE_CONFIG__DRIVER
+      value: "psycopg"
+ui:
+  image:
+    name: gcr.io/informed-436823/informed-ui
+    tag: latest
+
+hostname: "informed-ai.org"
+
+ingress:
+  enabled: true
+  className: gce
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.global-static-ip-name: "informed-app-static-ip"
+    kubernetes.io/ingress.backend-protocol: HTTP
+    cloud.google.com/backend-config: '{"default": {"healthCheck": {"checkIntervalSec": 30, "timeoutSec": 5, "healthyThreshold": 1, "unhealthyThreshold": 2}}}'
+
+certmanager:
+  enabled: false  # Disable cert-manager as we're not using a custom domain
+
+# Disable other components that are not needed for this setup
+externaldns:
+  enabled: false
+
+traefik:
+  enabled: false

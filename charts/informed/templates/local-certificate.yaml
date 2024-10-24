@@ -1,0 +1,12 @@
+{{- if .Values.localCerts.enabled }}
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: app-certificate
+  annotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+data:
+{{ include "local-tls-cert" . | indent 2 }}
+{{- end }}

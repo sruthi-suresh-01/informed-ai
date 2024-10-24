@@ -100,6 +100,7 @@ def sync_session_maker() -> Session:
 
 
 def init_db(database_config: DatabaseConfig) -> None:
+    log.info("Initializing db...")
     url = make_url(database_config.db_url)
     DatabaseEngine.init(
         url,

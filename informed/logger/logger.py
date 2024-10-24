@@ -26,6 +26,8 @@ if TYPE_CHECKING:
 
 
 def _filter_uvicorn_health_access_logs() -> None:
+    sys.stdout.write("Filtering uvicorn health access logs\n")
+
     def filter_health(log_record: logging.LogRecord) -> bool:
         return "GET /api/v1/health" not in log_record.getMessage()
 
@@ -47,11 +49,12 @@ def setup_logger(config: Config, override_level: str | None = None) -> None:
     else:
         # only forward uvicorn logging if otel is disabled. otherwise two loguru handlers collide
         _uvicorn_loguru_loging()
-
+        sys.stdout.write("Finished setting up uvicorn logging\n")
     _set_levels()
     _filter_uvicorn_health_access_logs()
     if config.logging_config.enable_console:
         _loguru_sink(config, override_level)
+        sys.stdout.write("Finished setting up loguru sink\n")
 
 
 def _loguru_sink_filters(level: str) -> Callable:
@@ -124,6 +127,7 @@ def _loguru_sink(config: Config, override_level: str | None = None) -> None:
 
 
 def _uvicorn_loguru_loging() -> None:
+    sys.stdout.write("Setting up uvicorn logging\n")
     loggers = (
         logging.getLogger(name)
         for name in logging.root.manager.loggerDict
@@ -230,6 +234,7 @@ def _setup_otel_logger(config: Config) -> None:
 
 
 def _set_levels() -> None:
+    sys.stdout.write("Setting log levels\n")
     # Mute false warning from Open Telemetry attributes checker
     logging.getLogger("opentelemetry.attributes").setLevel("ERROR")
     logging.getLogger("httpx").setLevel("WARN")
@@ -245,6 +250,7 @@ def _set_levels() -> None:
         logger.level(
             LogLevels.DIAGNOSTIC.name, LogLevels.DIAGNOSTIC.value, color="<yellow><dim>"
         )
+    sys.stdout.write("Finished setting log levels\n")
 
 
 instance_id = str(uuid.uuid4())

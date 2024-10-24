@@ -34,3 +34,11 @@ db.sqlite3
 
 # Ignore all .env files
 *.env
+
+
+# Ignore all Helm charts
+**/charts/*.tgz
+
+
+# # Ignore reference-cleric folder
+# /reference-cleric/

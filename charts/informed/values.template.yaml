@@ -1,0 +1,186 @@
+global:
+  postgresql:
+    auth:
+      # -- PostgreSQL username
+      username: db_username
+      # -- PostgreSQL password
+      password: db_password
+      # -- PostgreSQL database name
+      database: postgres
+      # -- PostgreSQL admin password
+      postgresPassword: password
+    # -- PostgreSQL host
+    host: postgres-0
+    # -- PostgreSQL port
+    port: 5432
+
+
+logging:
+  # -- Log level. Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level:
+  # -- Enable console logging
+  enableConsole:
+  # -- Flag to enable JSONifying logs
+  json:
+
+postgresql:
+  enabled: true
+  image:
+    registry: gcr.io
+    repository: informed-436823/informed-pgvector
+    tag: latest
+    pullPolicy: Always
+  auth:
+    username: db_username
+    password: db_password
+    database: postgres
+    postgresPassword: password
+  fullnameOverride: postgres
+  primary:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi
+  initdb:
+      user: postgres
+      password: password
+
+
+
+# -- Informed Core service configuration
+core:
+  # -- Image configuration for Informed core service
+  image:
+    # -- Informed Core service image name
+    name:
+    # -- Informed Core service image tag
+    tag: "$IMAGE_TAG"
+  # -- Extra environment variables for core service
+  extraEnvs:
+    - name: DATABASE_CONFIG__DRIVER
+      value: "psycopg"
+  # -- Annotations for core service pod
+  podAnnotations: {}
+  # -- Labels for core service pod
+  podLabels: {}
+  # -- Annotations for core service deployment
+  deploymentAnnotations: {}
+  # -- Labels for core service deployment
+  deploymentLabels: {}
+  # -- Resource requirements for core service
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2Gi
+    limits:
+      memory: 2Gi
+
+# -- Informed UI service configuration
+ui:
+  # -- Informed Image configuration for UI service
+  image:
+    # -- Informed UI service image name
+    name:
+    # -- Informed UI service image tag
+    tag: "$IMAGE_TAG"
+  # -- Annotations for UI service pod
+  podAnnotations: {}
+  # -- Labels for UI service pod
+  podLabels: {}
+  # -- Annotations for UI service deployment
+  deploymentAnnotations: {}
+  # -- Labels for UI service deployment
+  deploymentLabels: {}
+
+
+# -- Image pull configuration
+image:
+  # -- Image pull secret (will be provided by the Informed team)
+  pullSecret: ""
+  # -- Name of the image pull secret
+  pullSecretName:
+  # -- Image pull policy
+  pullPolicy: Always
+
+# -- Create a debug deployment to help troubleshoot issues
+debugDeployment:
+  # -- Enable debug deployment
+  enabled: false
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+hostname: ""  # Leave this empty
+
+ingress:
+  # enabled: false
+  # className: informed-traefik
+  # annotations:
+  #   traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  enabled: true
+  className: gce
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.allow-http: "true"
+
+service:
+  ui:
+    type: ClusterIP
+    port: 80
+    containerPort: 80
+  core:
+    type: ClusterIP
+    port: 80
+    containerPort: 3001
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+certificates:
+  # solver: informed
+  solver: http01
+
+certmanager:
+  enabled: false
+
+traefik:
+  enabled: false
+
+externaldns:
+  enabled: false
+
+localCerts:
+  enabled: false
+
+
+redis:
+  image:
+    repository: redis
+    tag: "6.2.6-alpine"
+    pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

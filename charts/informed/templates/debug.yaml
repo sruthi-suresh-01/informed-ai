@@ -1,0 +1,37 @@
+{{- if .Values.debugDeployment.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "informed-core.fullname" . }}-debug
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "informed-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: debug
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "informed-core.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: debug
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{ toYaml .Values.podAnnotations  | nindent 8 }}
+        {{- end }}
+        timestamp: {{ now | date "2006-01-02T15:04:05" }}
+      labels:
+        {{- include "informed-core.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: debug
+    spec:
+      serviceAccountName: {{ include "informed-core.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}-debug
+          image: nicolaka/netshoot:latest
+          command: [ "/bin/bash", "-c", "--" ]
+          args: [ "while true; do sleep 30; done;" ]
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 3000
+            allowPrivilegeEscalation: false
+{{- end }}

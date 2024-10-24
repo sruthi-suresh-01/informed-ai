@@ -181,7 +181,7 @@ async def set_user_details(
     return {"message": "User details updated successfully"}
 
 
-@user_router.get("/details")
+@user_router.get("/details", response_model=UserDetailsResponse)
 async def get_user_details(
     current_user: User = Depends(get_current_user),
 ) -> UserDetailsResponse:

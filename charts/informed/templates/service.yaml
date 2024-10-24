@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "informed-core.fullname" . }}-core
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "informed-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core-service
+spec:
+  type: {{ .Values.service.core.type }}
+  ports:
+    - port: {{ .Values.service.core.port }}
+      targetPort: {{ .Values.service.core.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "informed-core.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: core
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "informed-core.fullname" . }}-ui
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "informed-core.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui-service
+spec:
+  type: {{ .Values.service.ui.type }}
+  ports:
+    - port: {{ .Values.service.ui.port }}
+      targetPort: {{ .Values.service.ui.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "informed-core.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
