@@ -192,3 +192,7 @@ redis:
 llm:
   openai:
     apiKey: "$GPT_APIKEY"
+
+weatherSources:
+  weatherapi:
+    apiKey: "$WEATHER_API_KEY"

@@ -57,6 +57,8 @@ spec:
           env:
             - name: GPT_APIKEY
               value: {{ .Values.llm.openai.apiKey }}
+            - name: WEATHER_API_KEY
+              value: {{ .Values.weatherSources.weatherapi.apiKey }}
             - name: UI_CONFIG__WEB_URL
               value: https://{{ .Values.hostname }}/
             - name: INSTANCE_NAME

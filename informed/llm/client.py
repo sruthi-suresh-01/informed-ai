@@ -96,7 +96,7 @@ def num_tokens_from_messages(
 
 async def generate_response(
     query: str = "",
-    alerts: list[dict[str, str]] = [],
+    weather_data: dict[str, Any] = {},
     user_info: str = "",
     num_samples: int = 3,
     contradiction_threshold: float = 0.35,
@@ -111,9 +111,33 @@ async def generate_response(
         max_tokens=MAX_RESPONSE_TOKENS,
     )
 
+    # Create a comprehensive weather context
     context = ""
-    for alert in alerts:
-        context += f"Event: {alert['event']}; Headline: {alert['headline']}; Description: {alert['description']}; Instruction: {alert['instruction']}\n"
+    if weather_data:
+        location = weather_data["location"]
+        current = weather_data["current"]
+        forecast = weather_data["forecast"]["forecastday"][0]["day"]
+
+        context += f"Location: {location['name']}, {location['region']}, {location['country']}\n"
+        context += f"Current Weather: {current['temp_f']}°F (feels like {current['feelslike_f']}°F), {current['condition']['text']}\n"
+        context += f"Wind: {current['wind_mph']} mph from {current['wind_dir']}\n"
+        context += f"Humidity: {current['humidity']}%, Precipitation: {current['precip_in']} inches\n"
+        context += (
+            f"Air Quality Index (US EPA): {current['air_quality']['us-epa-index']}\n\n"
+        )
+
+        context += f"Today's Forecast:\n"
+        context += f"High: {forecast['maxtemp_f']}°F, Low: {forecast['mintemp_f']}°F\n"
+        context += f"Condition: {forecast['condition']['text']}\n"
+        context += f"Chance of Rain: {forecast['daily_chance_of_rain']}%\n"
+
+        # Add any weather alerts if present
+        if weather_data.get("alerts", {}).get("alert"):
+            context += "\nWeather Alerts:\n"
+            for alert in weather_data["alerts"]["alert"]:
+                context += (
+                    f"Alert: {alert.get('event', 'N/A')}; {alert.get('desc', 'N/A')}\n"
+                )
 
     messages = [
         {

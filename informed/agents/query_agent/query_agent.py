@@ -13,6 +13,8 @@ import json
 import asyncio
 from loguru import logger as log
 from fastapi import HTTPException, status
+import os
+import httpx
 
 
 class QueryAgent:
@@ -39,31 +41,76 @@ class QueryAgent:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
-        # Temp hardcoded user profile
+        # TODO: throw error if user details are not set
         if user and user.details and user.details.zip_code:
-            # print(user.details.zip_code)
             async with session_maker() as session:
-                latest_weather_query = await session.execute(
-                    select(WeatherData)
-                    .filter(
-                        cast(
-                            ColumnElement[bool],
-                            WeatherData.zip_code == user.details.zip_code,
-                        )
-                    )
-                    .order_by(WeatherData.timestamp.desc())  # type: ignore
-                )
-                latest_weather = latest_weather_query.first()
+                # TODO: fetch weather data instead of relying on db
+                weather_api_key = os.getenv("WEATHER_API_KEY")
+                weather_api_url = f"https://api.weatherapi.com/v1/forecast.json?key={weather_api_key}&q={user.details.zip_code}&days=1&aqi=yes&alerts=yes"
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(weather_api_url)
+                    raw_weather_data = response.json()
 
-            if latest_weather and latest_weather[0].weather_conditions:
-                weather_conditions = json.loads(latest_weather[0].weather_conditions)
-                await self._process_query(query, user, weather_conditions)
+                    # Extract only relevant weather information
+                    weather_data = {
+                        "location": raw_weather_data["location"],
+                        "current": {
+                            "last_updated_epoch": raw_weather_data["current"][
+                                "last_updated_epoch"
+                            ],
+                            "last_updated": raw_weather_data["current"]["last_updated"],
+                            "temp_c": raw_weather_data["current"]["temp_c"],
+                            "temp_f": raw_weather_data["current"]["temp_f"],
+                            "is_day": raw_weather_data["current"]["is_day"],
+                            "condition": raw_weather_data["current"]["condition"],
+                            "wind_mph": raw_weather_data["current"]["wind_mph"],
+                            "wind_degree": raw_weather_data["current"]["wind_degree"],
+                            "wind_dir": raw_weather_data["current"]["wind_dir"],
+                            "precip_in": raw_weather_data["current"]["precip_in"],
+                            "humidity": raw_weather_data["current"]["humidity"],
+                            "cloud": raw_weather_data["current"]["cloud"],
+                            "feelslike_c": raw_weather_data["current"]["feelslike_c"],
+                            "feelslike_f": raw_weather_data["current"]["feelslike_f"],
+                            "air_quality": raw_weather_data["current"]["air_quality"],
+                        },
+                        "forecast": {
+                            "forecastday": [
+                                {
+                                    "date": raw_weather_data["forecast"]["forecastday"][
+                                        0
+                                    ]["date"],
+                                    "day": raw_weather_data["forecast"]["forecastday"][
+                                        0
+                                    ]["day"],
+                                    "hour": [
+                                        {
+                                            "time": hour["time"],
+                                            "temp_f": hour["temp_f"],
+                                            "condition": hour["condition"],
+                                            "wind_mph": hour["wind_mph"],
+                                            "precip_in": hour["precip_in"],
+                                            "humidity": hour["humidity"],
+                                            "feelslike_f": hour["feelslike_f"],
+                                            "air_quality": hour["air_quality"],
+                                        }
+                                        for hour in raw_weather_data["forecast"][
+                                            "forecastday"
+                                        ][0]["hour"]
+                                    ],
+                                }
+                            ]
+                        },
+                        "alerts": raw_weather_data.get("alerts", {"alert": []}),
+                    }
+
+            if weather_data:
+                await self._process_query(query, user, weather_data)
             else:
                 log.warning(
                     f"No weather data available for zip code: {user.details.zip_code}"
                 )
                 try:
-                    await self._process_query(query, user, [])
+                    await self._process_query(query, user, {})
                 except Exception as e:
                     log.error(f"Error processing query: {e}")
                     query.state = QueryState.FAILED
@@ -71,16 +118,14 @@ class QueryAgent:
                     raise e
 
     async def _process_query(
-        self, query: Query, user: User, weather_alerts: list[dict[str, Any]]
+        self, query: Query, user: User, weather_data: dict[str, Any]
     ) -> None:
         findings = []
         try:
             if user and user.details and user.details.zip_code:
-
                 user_info = extract_user_info(user)
-                print("userifdo: ", user_info)
                 gpt_response = await generate_response(
-                    query=query.query, alerts=weather_alerts, user_info=user_info
+                    query=query.query, weather_data=weather_data, user_info=user_info
                 )
                 log.info(f"GPT response processed.\n {gpt_response.model_dump_json()}")
 
