@@ -1,34 +1,12 @@
-import asyncio
 import json
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 import tiktoken
 from loguru import logger
-from openai import AsyncOpenAI
 from pydantic import BaseModel
-from informed.config import ENV_VARS
 from informed.db_models.query import QuerySource
-
-GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
-GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
-
-
-# Context and Response Token size can be adjusted according to business requirements
-MAX_CONTEXT_SIZE = 7000
-MAX_RESPONSE_TOKENS = 150
-
-executor = ThreadPoolExecutor()
-
-openAIClient = AsyncOpenAI(
-    api_key=GPT_APIKEY,
-)
-
-
-class GPTConfig(BaseModel):
-    model: str
-    temperature: float = 0.0
-    response_format: str = "json"
-    max_tokens: int = MAX_RESPONSE_TOKENS
+from informed.llm.llm import getLLMResponse
+from informed.config import ENV_VARS
+from informed.llm.schema import build_function_schema
 
 
 class GeneratedResponse(BaseModel):
@@ -37,7 +15,11 @@ class GeneratedResponse(BaseModel):
     source: QuerySource | None = None
 
 
-# Code snippet borrowed from : https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken
+MAX_CONTEXT_SIZE = 7000
+MAX_RESPONSE_TOKENS = 150
+GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
+
+
 def num_tokens_from_messages(
     messages: list[dict[str, str]], model: str = "gpt-4o-mini-2024-07-18"
 ) -> int:
@@ -93,20 +75,15 @@ def num_tokens_from_messages(
     return num_tokens
 
 
+class WeatherResponse(BaseModel):
+    findings: list[str] = []
+
+
 async def generate_response(
     query: str = "",
     weather_data: dict[str, Any] = {},
     user_info: str = "",
 ) -> GeneratedResponse:
-    if not GPT_MODEL_NAME:
-        raise ValueError("GPT_MODEL_NAME is not set")
-
-    config = GPTConfig(
-        model=GPT_MODEL_NAME,
-        temperature=0,
-        response_format="json",
-        max_tokens=MAX_RESPONSE_TOKENS,
-    )
 
     # Create a comprehensive weather context
     context = ""
@@ -139,7 +116,7 @@ async def generate_response(
     messages = [
         {
             "role": "system",
-            "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their health details and preferences in json format. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of findings'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'findings':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works",
+            "content": "You are a highly skilled AI tasked with analyzing Weather alerts and giving users advice based on their health details and preferences. Given a user's question, their details, and weather info, your role involves identifying the most reasonable advice to give them about their query. If no answers are possible for the question-query, simply return empty array of findings'. Example= Query: What's the Weather like? Can I go for a walk? Response: {'findings':['The weather is good','The temperature is 38 C', 'Perfect weather for a walk']}. Try to answer in their preferred language of choice. If not available, English works",
         },
         {
             "role": "user",
@@ -151,7 +128,7 @@ async def generate_response(
         num_tokens = num_tokens_from_messages(messages, model=GPT_MODEL_NAME)
         logger.info(f"Number of tokens in LLM prompt: {num_tokens}")
         if (
-            num_tokens > MAX_CONTEXT_SIZE - config.max_tokens
+            num_tokens > MAX_CONTEXT_SIZE - MAX_RESPONSE_TOKENS
         ):  # To control the input text size
             return GeneratedResponse(
                 status="done",
@@ -160,10 +137,16 @@ async def generate_response(
                 ],
             )
 
+        output_schema = build_function_schema(
+            WeatherResponse, description="Answer the user's question about the weather"
+        )
+
         # Remove the loop and asyncio.gather
-        result = await getLLMResponse(messages, config)
-        if isinstance(result, Exception):
-            logger.error(f"Error in GPT response: {result}")
+        function = await getLLMResponse(messages, tools=[output_schema])
+        data = json.loads(function.arguments)
+        weather_response = WeatherResponse.model_validate(data)
+        if isinstance(weather_response, Exception):
+            logger.error(f"Error in GPT response: {weather_response}")
             return GeneratedResponse(
                 findings=[
                     "Sorry, I'm having some trouble answering your question. Please contact support"
@@ -171,8 +154,10 @@ async def generate_response(
                 status="done",
             )
 
-        if not isinstance(result, str):
-            logger.error(f"Unexpected response type for GPT response: {type(result)}")
+        if not isinstance(weather_response, WeatherResponse):
+            logger.error(
+                f"Unexpected response type for GPT response: {type(weather_response)}"
+            )
             return GeneratedResponse(
                 findings=[
                     "Sorry, I'm having some trouble answering your question. Please contact support"
@@ -180,24 +165,8 @@ async def generate_response(
                 status="done",
             )
 
-        logger.info(f"GPT Response: {result}")
-        sentences = []
-        try:
-            # Attempt to replace single quotes with double quotes
-            result = result.replace("'", '"')
-            sample_response = json.loads(result)
-            if "findings" in sample_response and isinstance(
-                sample_response["findings"], list
-            ):
-                sentences = sample_response["findings"]
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error for GPT response: {e}")
-            return GeneratedResponse(
-                findings=[
-                    "Sorry, I'm having some trouble answering your question. Please contact support"
-                ],
-                status="done",
-            )
+        logger.info(f"GPT Response: {weather_response.model_dump_json()}")
+        sentences = weather_response.findings
 
         if len(sentences) > 0:
             response = GeneratedResponse(
@@ -219,13 +188,3 @@ async def generate_response(
             ],
             status="done",
         )
-
-
-async def getLLMResponse(messages: Any, config: GPTConfig) -> Any:
-    response = await openAIClient.chat.completions.create(
-        model=config.model,
-        messages=messages,
-        temperature=config.temperature,
-        max_tokens=config.max_tokens,
-    )
-    return response.choices[0].message.content
