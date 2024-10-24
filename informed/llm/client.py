@@ -221,6 +221,5 @@ async def getLLMResponse(messages: Any, config: GPTConfig) -> Any:
         messages=messages,
         temperature=config.temperature,
         max_tokens=config.max_tokens,
-        # response_format=config.response_format,
     )
     return response.choices[0].message.content
