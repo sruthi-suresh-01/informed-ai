@@ -25,11 +25,14 @@ const languages =  [
 
 const ethnicities = [
     'Hispanic',
-    'White',
-    'Black',
+    'Caucasian',
+    'African American',
     'Asian',
     'Native American',
+    'Alaska Native',
+    'Native Hawaiian',
     'Pacific Islander',
+    'Two or More Races',
     'Other'
 ];
 

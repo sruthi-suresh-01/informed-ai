@@ -196,3 +196,16 @@ llm:
 weatherSources:
   weatherapi:
     apiKey: "$WEATHER_API_KEY"
+
+opentelemetry:
+  enabled: true
+  config:
+    exporters:
+      googlecloud:
+        project:
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [googlecloud]

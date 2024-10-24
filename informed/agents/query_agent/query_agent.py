@@ -13,8 +13,8 @@ import json
 import asyncio
 from loguru import logger as log
 from fastapi import HTTPException, status
-import os
 import httpx
+from informed.config import ENV_VARS
 
 
 class QueryAgent:
@@ -45,7 +45,7 @@ class QueryAgent:
         if user and user.details and user.details.zip_code:
             async with session_maker() as session:
                 # TODO: fetch weather data instead of relying on db
-                weather_api_key = os.getenv("WEATHER_API_KEY")
+                weather_api_key = ENV_VARS["WEATHER_API_KEY"]
                 weather_api_url = f"https://api.weatherapi.com/v1/forecast.json?key={weather_api_key}&q={user.details.zip_code}&days=1&aqi=yes&alerts=yes"
                 async with httpx.AsyncClient() as client:
                     response = await client.get(weather_api_url)

@@ -29,6 +29,7 @@ pgvector = "^0.3.4"
 schedule = "^1.2.2"
 # Kept but skipped in deptry checks
 tenacity = "^9.0.0"
+slowapi = "^0.1.9"
 
 [tool.poetry.group.dev.dependencies]
 deptry = "^0.20.0"

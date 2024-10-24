@@ -23,3 +23,13 @@ dependencies:
     version: 15.5.32
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
+  - name: opentelemetry-collector
+    alias: oteldaemon
+    version: 0.108.0
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+    condition: telemetry.enabled
+  - name: opentelemetry-collector
+    alias: otel
+    version: 0.108.0
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+    condition: telemetry.enabled

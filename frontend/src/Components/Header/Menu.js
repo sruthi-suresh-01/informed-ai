@@ -4,14 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import PersonIcon from '@mui/icons-material/Person';
 
@@ -30,7 +26,7 @@ const menuItems = [
         label: 'Profile',
         dialog: true,
         dialogProps: {
-            title: "Update User Details",
+            title: "User Details",
             success_msg: "User details updated successfully!",
         }
     },
@@ -38,14 +34,10 @@ const menuItems = [
         code: 'health_details',
         label: 'Health Details',
         dialogProps: {
-            title: "Update Health Details",
+            title: "Health Details",
             success_msg: "User details updated successfully!",
         }
     },
-    // {
-    //     code: 'dependants',
-    //     label: 'Dependants',
-    // },
 ]
 const initialDialogFormState = {"profile": {}, "health_details": {}}
 export function Menu(props) {
@@ -121,19 +113,6 @@ export function Menu(props) {
             </ListItem>
         ))}
         </List>
-        {/* <Divider />
-        <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-            <ListItem key={text} disablePadding>
-            <ListItemButton>
-                <ListItemIcon>
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                </ListItemIcon>
-                <ListItemText primary={text} />
-            </ListItemButton>
-            </ListItem>
-        ))}
-        </List> */}
     </Box>
     );
 

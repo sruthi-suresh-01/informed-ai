@@ -1,31 +1,28 @@
-import asyncio
-import json
 from typing import cast, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from informed.helper.utils import get_current_user
 from informed.api.schema import QueryRequest, QueryResponse
 from informed.db_models.users import (
     User,
 )
-from informed.db_models.weather import WeatherData
 from informed.informed import InformedManager
 from uuid import UUID
 
 # from dependencies import db_dependency
 chat_query_router = APIRouter()
 
-# TODO: Move to Session Store
-current_task: asyncio.Task | None = None  # Reference to the current processing task
-processing_data: dict[str, Any] = {}
 
-# Lock to synchronize access to processing_data
-lock = asyncio.Lock()
+# Create a Limiter instance
+limiter = Limiter(key_func=get_remote_address)
 
 
 @chat_query_router.post("/", response_model=QueryResponse)
+@limiter.limit("20/minute")
 async def submit_question(
     request: Request,
     query_request: QueryRequest,

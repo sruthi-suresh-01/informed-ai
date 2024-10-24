@@ -8,6 +8,9 @@ from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger as log
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from informed.api.chat_query import chat_query_router
 from informed.api.user import user_router
@@ -76,6 +79,13 @@ def create_app(config: Config) -> FastAPI:
 
     app.include_router(api_v1_router, prefix="/api/v1")
 
+    # Create a Limiter instance with a global rate limit
+    limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
+    # Add the rate limit middleware
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(Exception, general_exception_handler)
 
@@ -130,3 +140,20 @@ def general_exception_handler(request: Request, exception: Exception) -> Respons
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=error_response
     )
+
+
+def _rate_limit_exceeded_handler(request: Request, exc: Exception) -> Response:
+    """
+    Build a simple JSON response that includes the details of the rate limit
+    that was hit. If no limit is hit, the countdown is added to headers.
+    """
+    if isinstance(exc, RateLimitExceeded):
+        response = JSONResponse(
+            {"error": f"Rate limit exceeded: {exc.detail}"}, status_code=429
+        )
+        response = request.app.state.limiter._inject_headers(
+            response, request.state.view_rate_limit
+        )
+        return response
+    # Handle other exceptions if necessary
+    return JSONResponse({"error": "An unexpected error occurred."}, status_code=500)

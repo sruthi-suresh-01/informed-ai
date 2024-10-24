@@ -8,11 +8,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
 GPT_APIKEY = os.getenv("GPT_APIKEY", "")
-GPT_MODEL_NAME = os.getenv("GPT_MODEL_NAME", "gpt-3.5-turbo")
+GPT_MODEL_NAME = os.getenv("GPT_MODEL_NAME", "gpt-4o-mini-2024-07-18")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")
 
+# TODO: Change this approach to convert env directly to Config class
 ENV_VARS = {
     "GPT_APIKEY": GPT_APIKEY,
     "GPT_MODEL_NAME": GPT_MODEL_NAME,
+    "WEATHER_API_KEY": WEATHER_API_KEY,
 }
 
 

@@ -14,7 +14,6 @@ global:
       database: postgres
       postgresPassword: password
     host: postgres
-    # host: 34.118.239.95
     port: 5432
 
 core:
@@ -51,3 +50,16 @@ externaldns:
 
 traefik:
   enabled: false
+
+opentelemetry:
+  enabled: true
+  config:
+    exporters:
+      googlecloud:
+        project: informed-436823
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [googlecloud]
