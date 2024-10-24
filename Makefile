@@ -72,13 +72,6 @@ build-pgvector:
 		-t gcr.io/$(GCP_PROJECT_ID)/informed-pgvector:latest \
 		--push misc/images/pgvector
 
-# This target is no longer needed as we're using --push in the build commands
-# push-images:
-# 	@echo "🚀 Pushing images to Google Container Registry"
-# 	docker push gcr.io/$(GCP_PROJECT_ID)/informed-ui:latest
-# 	docker push gcr.io/$(GCP_PROJECT_ID)/informed-core:latest
-# 	docker push gcr.io/$(GCP_PROJECT_ID)/informed-pgvector:latest
-
 # Minikube and Kubernetes
 .PHONY: ensure-minikube run-local
 ensure-minikube:
@@ -95,10 +88,10 @@ run-local: ensure-minikube build-ui build-core build-pgvector
 # Helm Chart Installation
 .PHONY: install-helm-chart-from-local-chart install-helm-chart add-helm-repos
 install-helm-chart-from-local-chart: .requires_image_tag
-	@envsubst '$${IMAGE_TAG}' < charts/informed/values.template.yaml > charts/informed/values.yaml
-	@echo "Installing Helm chart for $(env) environment..."
-	@$(MAKE) install-helm-chart CHART="charts/informed" version="0.1.0" extra="-f charts/informed/values.yaml -f charts/$(env).values.yaml $(extra)"
-	@rm charts/informed/values.yaml
+	@set -a && . ./.env && \
+	envsubst < charts/informed/values.template.yaml > charts/informed/values.yaml && \
+	$(MAKE) install-helm-chart CHART="charts/informed" version="0.1.0" extra="-f charts/informed/values.yaml -f charts/$(env).values.yaml $(extra)" && \
+	rm charts/informed/values.yaml
 	@echo "✅ Helm chart installed for $(env) environment."
 
 install-helm-chart: .requires_version .requires_env
@@ -202,19 +195,3 @@ gcp-build-push: build-ui build-core build-pgvector
 gcp-deploy:
 	@echo "🚀 Deploying to GCP"
 	IMAGE_TAG=latest env=prod $(MAKE) install-helm-chart-from-local-chart CHART="charts/informed" version="0.1.0" extra="-f charts/informed/values.yaml -f charts/prod.values.yaml"
-
-debug-deployment:
-	@echo "Debugging deployment..."
-	@echo "Checking PostgreSQL pod:"
-	@kubectl describe pod -l app.kubernetes.io/name=postgresql -n informed
-	@echo "\nChecking PostgreSQL logs:"
-	@kubectl logs -l app.kubernetes.io/name=postgresql -n informed --all-containers
-	@echo "\nChecking UI pod:"
-	@kubectl describe pod -l app.kubernetes.io/name=informed-ui -n informed
-	@echo "\nChecking UI logs:"
-	@kubectl logs -l app.kubernetes.io/name=informed-ui -n informed --all-containers
-	@echo "\nChecking node architecture:"
-	@kubectl get nodes -o wide
-	@echo "\nVerifying image architectures:"
-	@docker manifest inspect gcr.io/$(GCP_PROJECT_ID)/informed-pgvector:latest
-	@docker manifest inspect gcr.io/$(GCP_PROJECT_ID)/informed-ui:latest

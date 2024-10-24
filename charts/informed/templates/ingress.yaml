@@ -7,6 +7,9 @@ metadata:
     {{- if .Values.ingress.annotations }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
     {{- end }}
+    # These annotations enforce HTTPS
+    kubernetes.io/ingress.allow-http: "false"
+    networking.gke.io/managed-certificates: {{ include "informed-core.fullname" . }}-cert
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

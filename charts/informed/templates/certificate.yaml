@@ -1,31 +1,7 @@
-{{- if .Values.certmanager.enabled }}
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
 metadata:
-  name: letsencrypt-issuer
-  namespace: informed
+  name: {{ include "informed-core.fullname" . }}-cert
 spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: itsrahulrajesh@gmail.com
-    privateKeySecretRef:
-      name: cert-manager-letsencrypt
-    # Add a single challenge solver, HTTP01 using nginx
-    solvers:
-      - dns01:
-          cloudDNS:
-            project: {{ .Values.certificates.solver }}
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: app-certificate
-  namespace: informed
-spec:
-  secretName: app-certificate
-  issuerRef:
-    name: letsencrypt-issuer
-    kind: ClusterIssuer
-  dnsNames:
+  domains:
     - {{ .Values.hostname }}
-{{- end }}
