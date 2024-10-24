@@ -52,7 +52,7 @@ traefik:
   enabled: false
 
 opentelemetry:
-  enabled: true
+  enabled: false
   config:
     exporters:
       googlecloud:
@@ -63,3 +63,6 @@ opentelemetry:
           receivers: [otlp]
           processors: []
           exporters: [googlecloud]
+
+telemetry:
+  enabled: false

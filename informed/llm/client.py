@@ -9,12 +9,6 @@ from pydantic import BaseModel
 from informed.config import ENV_VARS
 from informed.db_models.query import QuerySource
 
-# import torch
-# from selfcheckgpt.modeling_selfcheck import SelfCheckNLI
-
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# selfcheck_nli = SelfCheckNLI(device=device)
-
 GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
 GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
 
@@ -22,7 +16,6 @@ GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
 # Context and Response Token size can be adjusted according to business requirements
 MAX_CONTEXT_SIZE = 7000
 MAX_RESPONSE_TOKENS = 150
-# MAX_RESPONSE_TOKENS = 1000
 
 executor = ThreadPoolExecutor()
 
@@ -98,8 +91,6 @@ async def generate_response(
     query: str = "",
     weather_data: dict[str, Any] = {},
     user_info: str = "",
-    num_samples: int = 3,
-    contradiction_threshold: float = 0.35,
 ) -> GeneratedResponse:
     if not GPT_MODEL_NAME:
         raise ValueError("GPT_MODEL_NAME is not set")
@@ -163,53 +154,46 @@ async def generate_response(
                 ],
             )
 
+        # Remove the loop and asyncio.gather
+        result = await getLLMResponse(messages, config)
+        if isinstance(result, Exception):
+            logger.error(f"Error in GPT response: {result}")
+            return GeneratedResponse(
+                findings=[
+                    "Sorry, I'm having some trouble answering your question. Please contact support"
+                ],
+                status="done",
+            )
+
+        if not isinstance(result, str):
+            logger.error(f"Unexpected response type for GPT response: {type(result)}")
+            return GeneratedResponse(
+                findings=[
+                    "Sorry, I'm having some trouble answering your question. Please contact support"
+                ],
+                status="done",
+            )
+
+        logger.info(f"GPT Response: {result}")
         sentences = []
-        samples = []
-        tasks = [getLLMResponse(messages, config) for _ in range(num_samples)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        print("************************")
-        print("Results length", len(results))
-        print("************************")
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                logger.error(f"Error in GPT response {i+1}: {result}")
-                continue
-
-            if not isinstance(result, str):
-                logger.error(
-                    f"Unexpected response type for GPT response {i+1}: {type(result)}"
-                )
-                continue
-
-            logger.info(f"GPT Response {i+1}: {result}")
-
-            try:
-                sample_response = json.loads(result)
-                if (
-                    "findings" in sample_response
-                    and isinstance(sample_response["findings"], list)
-                    and len(sample_response["findings"]) > 0
-                ):
-                    if i == 0:
-                        # Main Response
-                        sentences = sample_response["findings"]
-                    else:
-                        # Sampled Responses
-                        samples.append(".".join(sample_response["findings"]))
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error for GPT response {i+1}: {e}")
-
-        # TODO: Temp commented out
-        # sent_scores_nli = selfcheck_nli.predict(
-        #     sentences = sentences,      # list of sentences from primary GPT response
-        #     sampled_passages = samples, # list of passages from sampled GPT responses
-        # )
-        # sent_scores_nli = await asyncio.to_thread(selfcheck_nli.predict, sentences, samples) # - used later
-        # contradiction_score = sum(sent_scores_nli) / len(sent_scores_nli)
+        try:
+            sample_response = json.loads(result)
+            if "findings" in sample_response and isinstance(
+                sample_response["findings"], list
+            ):
+                sentences = sample_response["findings"]
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error for GPT response: {e}")
+            return GeneratedResponse(
+                findings=[
+                    "Sorry, I'm having some trouble answering your question. Please contact support"
+                ],
+                status="done",
+            )
 
         contradiction_score = 0
         logger.info(f"Overall Contradiction: {contradiction_score}")
-        if contradiction_score < contradiction_threshold:
+        if len(sentences) > 0:
             response = GeneratedResponse(
                 findings=sentences,
                 status="success",
@@ -218,7 +202,7 @@ async def generate_response(
             return response
         else:
             return GeneratedResponse(
-                findings=["Sorry, I cant answer your question"], status="done"
+                findings=["Sorry, I can't answer your question"], status="done"
             )
 
     except Exception as e:

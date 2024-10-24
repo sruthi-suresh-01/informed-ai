@@ -198,7 +198,7 @@ weatherSources:
     apiKey: "$WEATHER_API_KEY"
 
 opentelemetry:
-  enabled: true
+  enabled: false
   config:
     exporters:
       googlecloud:
