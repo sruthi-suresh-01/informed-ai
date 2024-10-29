@@ -23,6 +23,17 @@ from informed.llm.llm import ChatState
 from informed.users.manager import UserManager
 
 
+# TODO: Need to modularize this
+# 1. Add more sources
+# 2. Add more tools (if use case exists where we need to iterate on initial agent response)
+# 3. Split into pre-process: apis + query relevance (knowledge source)
+# 4. Post-process: answer formatting
+
+# TODO: Move data models to separate file
+# TODO: Move system prompt to top level file, add to system context in sub-agents
+# TODO: Move each API Tool to separate file
+
+
 class WeatherResponse(BaseModel):
     findings: list[str] = []
 
