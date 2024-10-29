@@ -55,9 +55,11 @@ spec:
           image: "{{ .Values.core.image.name }}:{{ .Values.core.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: GPT_APIKEY
+            - name: LLM_CONFIG__OPENAI_CONFIG__API_KEY
               value: {{ .Values.llm.openai.apiKey }}
-            - name: WEATHER_API_KEY
+            - name: LLM_CONFIG__LLM_MODEL
+              value: {{ .Values.llm.openai.model }}
+            - name: WEATHER_SOURCES_CONFIG__WEATHERAPI__API_KEY
               value: {{ .Values.weatherSources.weatherapi.apiKey }}
             - name: UI_CONFIG__WEB_URL
               value: https://{{ .Values.hostname }}/

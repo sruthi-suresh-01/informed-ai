@@ -191,11 +191,12 @@ redis:
 
 llm:
   openai:
-    apiKey: "$GPT_APIKEY"
+    apiKey: "$LLM_CONFIG__OPENAI_CONFIG__API_KEY"
+    model: "$LLM_CONFIG__LLM_MODEL"
 
 weatherSources:
   weatherapi:
-    apiKey: "$WEATHER_API_KEY"
+    apiKey: "$WEATHER_SOURCES_CONFIG__WEATHERAPI__API_KEY"
 
 opentelemetry:
   enabled: false

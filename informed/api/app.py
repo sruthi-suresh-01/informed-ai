@@ -21,6 +21,7 @@ from informed.db import init_db
 from informed.redis import init_redis_client
 from informed.helper.utils import get_concise_exception_traceback
 from informed.informed import InformedManager
+from informed.llm.client import LLMClient
 
 
 @asynccontextmanager
@@ -57,7 +58,10 @@ def create_app(config: Config) -> FastAPI:
     executor = ThreadPoolExecutor(max_workers=4)
     app.state.executor = executor
 
-    app_manager = InformedManager(config)
+    llm_client = LLMClient(config.llm_config)
+    app.state.llm_client = llm_client
+
+    app_manager = InformedManager(config, llm_client)
     app.state.app_manager = app_manager
 
     # Initialize the job scheduler

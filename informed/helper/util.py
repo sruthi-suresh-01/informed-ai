@@ -5,7 +5,6 @@ import httpx
 from fastapi import HTTPException
 from loguru import logger
 
-from informed.config import ENV_VARS
 from informed.db_models.users import User
 import os
 

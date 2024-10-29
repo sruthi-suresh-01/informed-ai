@@ -7,12 +7,21 @@ from uuid import UUID
 from loguru import logger as log
 import asyncio
 from contextvars import ContextVar
+from informed.llm.client import LLMClient
+from informed.db import session_maker
+from sqlalchemy.sql import select, ColumnElement
+from typing import cast, Any
+from informed.db_models.users import User
+from fastapi import HTTPException, status
+from informed.users.manager import UserManager
 
 
 class InformedManager:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, llm_client: LLMClient):
         self.config = config
         self.query_manager = QueryManager()
+        self.user_manager = UserManager(config)
+        self.llm_client = llm_client
         self._lock_var: ContextVar[asyncio.Lock] = ContextVar("lock_var")
         self._query_tasks: dict[UUID, asyncio.Task] = {}
         self._user_tasks: dict[UUID, asyncio.Task] = {}
@@ -94,8 +103,11 @@ class InformedManager:
 
     async def _run_query_agent(self, query: Query) -> asyncio.Task:
         query_agent = QueryAgent(
-            query.query_id,
-            self.query_manager,
+            query_id=query.query_id,
+            query_manager=self.query_manager,
+            user_manager=self.user_manager,
+            llm_client=self.llm_client,
+            weather_sources_config=self.config.weather_sources_config,
         )
         query_task = asyncio.create_task(query_agent.run())
         # self._query_tasks[query_id] = query_task
@@ -118,3 +130,15 @@ class InformedManager:
         if query is None:
             return None
         return QueryResponse.from_db(query)
+
+    async def get_user(self, user_id: UUID) -> User:
+        async with session_maker() as session:
+            result = await session.execute(
+                select(User).filter(cast(ColumnElement[bool], User.id == user_id))
+            )
+            user = result.unique().scalar_one_or_none()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+        return user

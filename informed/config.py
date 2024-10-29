@@ -7,16 +7,22 @@ from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
-GPT_APIKEY = os.getenv("GPT_APIKEY", "")
-GPT_MODEL_NAME = os.getenv("GPT_MODEL_NAME", "gpt-4o-mini-2024-07-18")
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")
 
-# TODO: Change this approach to convert env directly to Config class
-ENV_VARS = {
-    "GPT_APIKEY": GPT_APIKEY,
-    "GPT_MODEL_NAME": GPT_MODEL_NAME,
-    "WEATHER_API_KEY": WEATHER_API_KEY,
-}
+class WeatherSource(str, Enum):
+    WEATHERAPI = "weatherapi"
+
+
+class WeatherSourceConfig(BaseModel):
+    source: WeatherSource
+    api_key: str | None = None
+
+
+class WeatherAPIConfig(WeatherSourceConfig):
+    source: WeatherSource = WeatherSource.WEATHERAPI
+
+
+class WeatherSourcesConfig(BaseModel):
+    weatherapi: WeatherAPIConfig | None = None
 
 
 class SafeDumpableModel(BaseModel):
@@ -81,6 +87,22 @@ class RedisConfig(SafeDumpableModel):
     decode_responses: bool = Field(default=True, exclude=False)
 
 
+class LLMProvider(str, Enum):
+    OPENAI = "openai"
+
+
+class OpenAiConfig(BaseModel):
+    api_key: str
+
+
+class LLMConfig(BaseModel):
+    llm_provider: LLMProvider = LLMProvider.OPENAI
+    llm_model: str = "gpt-4o-mini-2024-07-18"
+    temperature: float = 0.0
+    max_tokens: int = 150
+    openai_config: OpenAiConfig | None = None
+
+
 class Config(SafeDumpableModel, BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env", ".env.overrides"),
@@ -89,10 +111,14 @@ class Config(SafeDumpableModel, BaseSettings):
         env_nested_delimiter="__",
     )
 
+    llm_config: LLMConfig = LLMConfig()
+
     service_name: str = "informed-core"
     database_config: DatabaseConfig
     redis_config: RedisConfig = RedisConfig()
     telemetry_config: TelemetryConfig = TelemetryConfig()
+
+    weather_sources_config: WeatherSourcesConfig = WeatherSourcesConfig()
 
     ui_config: UIConfig = UIConfig()
     cache_timestamps: bool = Field(default=False, exclude=False)

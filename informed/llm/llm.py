@@ -1,36 +1,7 @@
 from typing import Any
-import asyncio
-import json
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 import tiktoken
 from loguru import logger
-from openai import AsyncOpenAI
-from pydantic import BaseModel
-from informed.config import ENV_VARS
-from informed.db_models.query import QuerySource
-from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_message_tool_call import Function
-
-GPT_APIKEY = ENV_VARS["GPT_APIKEY"]
-GPT_MODEL_NAME = ENV_VARS["GPT_MODEL_NAME"]
-
-
-# Context and Response Token size can be adjusted according to business requirements
-MAX_CONTEXT_SIZE = 7000
-MAX_RESPONSE_TOKENS = 150
-
-
-openAIClient = AsyncOpenAI(
-    api_key=GPT_APIKEY,
-)
-
-
-class GPTConfig(BaseModel):
-    model: str
-    temperature: float = 0.0
-    response_format: str = "json"
-    max_tokens: int = MAX_RESPONSE_TOKENS
 
 
 class ChatState:
@@ -52,28 +23,56 @@ class ChatState:
         self.messages.append(message)
 
 
-async def getLLMResponse(messages: Any, tools: list[Any]) -> Function:
-    config = GPTConfig(
-        model=GPT_MODEL_NAME,
-        temperature=0,
-        max_tokens=MAX_RESPONSE_TOKENS,
-    )
-    response = await openAIClient.chat.completions.create(
-        model=config.model,
-        messages=messages,
-        temperature=config.temperature,
-        max_tokens=config.max_tokens,
-        tools=tools,
-    )
-    if (
-        response
-        and response.choices
-        and isinstance(response.choices[0], Choice)
-        and response.choices[0].message
-        and response.choices[0].message.tool_calls
-    ):
-        function: Function = response.choices[0].message.tool_calls[0].function
-
-        return function
+def num_tokens_from_messages(
+    messages: list[dict[str, str]], model: str = "gpt-4o-mini-2024-07-18"
+) -> int:
+    """Return the number of tokens used by a list of messages."""
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        logger.warning("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model in {
+        "gpt-3.5-turbo-0125",
+        "gpt-4-0314",
+        "gpt-4-32k-0314",
+        "gpt-4-0613",
+        "gpt-4-32k-0613",
+        "gpt-4o-mini-2024-07-18",
+        "gpt-4o-2024-08-06",
+    }:
+        tokens_per_message = 3
+        tokens_per_name = 1
+    elif "gpt-3.5-turbo" in model:
+        logger.warning(
+            "Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0125."
+        )
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0125")
+    elif "gpt-4o-mini" in model:
+        logger.warning(
+            "Warning: gpt-4o-mini may update over time. Returning num tokens assuming gpt-4o-mini-2024-07-18."
+        )
+        return num_tokens_from_messages(messages, model="gpt-4o-mini-2024-07-18")
+    elif "gpt-4o" in model:
+        logger.warning(
+            "Warning: gpt-4o and gpt-4o-mini may update over time. Returning num tokens assuming gpt-4o-2024-08-06."
+        )
+        return num_tokens_from_messages(messages, model="gpt-4o-2024-08-06")
+    elif "gpt-4" in model:
+        logger.warning(
+            "Warning: gpt-4 may update over time. Returning num tokens assuming gpt-4-0613."
+        )
+        return num_tokens_from_messages(messages, model="gpt-4-0613")
     else:
-        raise Exception("No function call found in the response")
+        raise NotImplementedError(
+            f"num_tokens_from_messages() is not implemented for model {model}."
+        )
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(value))
+            if key == "name":
+                num_tokens += tokens_per_name
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    return num_tokens

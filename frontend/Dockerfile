@@ -30,8 +30,8 @@ RUN npm ci
 # Copy the entire project
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application with production optimization
+RUN NODE_ENV=production npm run build
 
 # ---- Serve Stage ----
 FROM nginx:stable-alpine3.19-slim AS server
