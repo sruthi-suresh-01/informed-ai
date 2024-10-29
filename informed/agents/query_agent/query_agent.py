@@ -23,12 +23,6 @@ from informed.llm.llm import ChatState
 from informed.users.manager import UserManager
 
 
-class GeneratedResponse(BaseModel):
-    status: str
-    findings: list[str] = []
-    source: QuerySource | None = None
-
-
 class WeatherResponse(BaseModel):
     findings: list[str] = []
 
@@ -206,8 +200,18 @@ class QueryAgent:
             context = await build_weather_query_context(
                 user, weather_sources_config=self.weather_sources_config
             )
-            user_prompt = (
-                f"\nQuestion: {query.query}\nContext: \n{context}\n{user_info}"
+            user_prompt = dedent(
+                f"""
+                <query>
+                {query.query}
+                </query>
+                <context>
+                {context}
+                </context>
+                <user>
+                {user_info}
+                </user>
+                """
             )
             chat_state = ChatState(system_prompt=system_prompt, user_prompt=user_prompt)
             output_schema = build_function_schema(
@@ -221,58 +225,29 @@ class QueryAgent:
                 )
                 data = json.loads(function.arguments)
                 weather_response = WeatherResponse.model_validate(data)
-                generated_response = None
 
-                if isinstance(weather_response, Exception):
-                    log.error(f"Error in GPT response: {weather_response}")
-                    generated_response = GeneratedResponse(
-                        findings=[
-                            "Sorry, I'm having some trouble answering your question. Please contact support"
-                        ],
-                        status="done",
-                    )
-
-                if not isinstance(weather_response, WeatherResponse):
+                if isinstance(weather_response, WeatherResponse):
+                    log.info(f"GPT Response: {weather_response.model_dump_json()}")
+                    query.state = QueryState.COMPLETED
+                    query.findings = weather_response.findings
+                    # TODO: Need to change after adding multiple sources
+                    # Also remove this hardcoded source
+                    query.sources = [QuerySource(source="https://api.weather.gov")]
+                else:
                     log.error(
                         f"Unexpected response type for GPT response: {type(weather_response)}"
                     )
-                    generated_response = GeneratedResponse(
-                        findings=[
-                            "Sorry, I'm having some trouble answering your question. Please contact support"
-                        ],
-                        status="done",
-                    )
-
-                log.info(f"GPT Response: {weather_response.model_dump_json()}")
-
-                if len(weather_response.findings) > 0:
-                    generated_response = GeneratedResponse(
-                        findings=weather_response.findings,
-                        status="success",
-                        source=QuerySource(source="https://api.weather.gov"),
-                    )
-                    query.state = QueryState.COMPLETED
-                    query.findings = weather_response.findings
-                    if generated_response and generated_response.source:
-                        # TODO: Need to change after adding multiple sources
-                        query.sources = [generated_response.source]
-                else:
-                    generated_response = GeneratedResponse(
-                        findings=["Sorry, I can't answer your question"], status="done"
-                    )
+                    query.state = QueryState.FAILED
+                    query.findings = [
+                        "Sorry, I'm having some trouble answering your question. Please contact support"
+                    ]
 
             except Exception as e:
                 log.error(e)
-                generated_response = GeneratedResponse(
-                    findings=[
-                        "Sorry, I'm having some trouble answering your question. Please contact support"
-                    ],
-                    status="done",
-                )
-
-            log.info(
-                f"GPT response processed.\n {generated_response.model_dump_json()}"
-            )
+                query.state = QueryState.FAILED
+                query.findings = [
+                    "Sorry, I'm having some trouble answering your question. Please contact support"
+                ]
 
             await self.query_manager.persist_query(query)
 
