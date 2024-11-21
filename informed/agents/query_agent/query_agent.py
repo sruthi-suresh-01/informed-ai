@@ -25,7 +25,7 @@ from textwrap import dedent
 from datetime import datetime, UTC
 from informed.llm.llm import ChatState
 from informed.users.manager import UserManager
-
+from informed.services.notification_service import NotificationService
 
 # TODO: Need to modularize this
 # 1. Add more sources
@@ -50,12 +50,14 @@ class QueryAgent:
         user_manager: UserManager,
         llm_client: LLMClient,
         weather_sources_config: WeatherSourcesConfig,
+        notification_service: NotificationService,
     ):
         self.query_id = query_id
         self.query_manager = query_manager
         self.user_manager = user_manager
         self.llm_client = llm_client
         self.weather_sources_config = weather_sources_config
+        self.notification_service = notification_service
 
     async def run(self) -> None:
         query = await self.query_manager.get_query(self.query_id)
@@ -76,7 +78,9 @@ class QueryAgent:
             system_prompt = build_system_prompt()
             user_info = extract_user_info(user)
             context = await build_weather_query_context(
-                user, weather_sources_config=self.weather_sources_config
+                user,
+                weather_sources_config=self.weather_sources_config,
+                notification_service=self.notification_service,
             )
             user_prompt = dedent(
                 f"""

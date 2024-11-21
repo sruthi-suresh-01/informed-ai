@@ -10,5 +10,6 @@ export const Constants = {
         "setUserDetails": "api/v1/user/details",
         "getUserMedicalDetails": "api/v1/user/medical-details",
         "setUserMedicalDetails": "api/v1/user/medical-details",
+        "notifications": "/api/v1/admin/notifications"
     }
 }

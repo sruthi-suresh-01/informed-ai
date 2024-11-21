@@ -9,6 +9,7 @@ from .users import (
     UserDetails,
     UserMedicalDetails,
 )
+from .notifications import WeatherNotification
 from .weather import WeatherData
 
 from .query import Query, QueryState, QuerySource
@@ -31,4 +32,6 @@ __all__ = [
     "Query",
     "QueryState",
     "QuerySource",
+    # Notification-related models
+    "WeatherNotification",
 ]

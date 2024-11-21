@@ -1,0 +1,283 @@
+.adminContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.filterContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+}
+
+.filterSelect {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 200px;
+}
+
+.notificationsList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notificationItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.notificationItem:hover {
+    border-color: #ccc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.notificationDetails {
+    flex: 1;
+    min-width: 0; /* Enables text truncation */
+}
+
+.notificationText {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notificationMeta {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.expandedNotification {
+    background-color: #f8f9fa;
+}
+
+.expandedContent {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.metadataGrid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    font-size: 14px;
+}
+
+.metadataLabel {
+    color: #666;
+    font-weight: 500;
+}
+
+.metadataValue {
+    color: #333;
+}
+
+.deleteButton {
+    padding: 5px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-left: 12px;
+}
+
+.deleteButton:hover {
+    background-color: #c82333;
+}
+
+.formCancelButton {
+    padding: 8px 16px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.formCancelButton:hover {
+    background-color: #5a6268;
+}
+
+.addNotificationContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.notificationInput {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.zipCodeTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    min-height: 38px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+}
+
+.expirySelect {
+    width: 100%;
+}
+
+.addFormActions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.addButton {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.addButton:hover {
+    background-color: #0056b3;
+}
+
+.addButton:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.addNewButton {
+    padding: 5px 10px;
+    margin-right: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.addNewButton:hover {
+    background-color: #218838;
+}
+
+.removeTag {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.zipTag {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #495057;
+}
+
+.expandedMessage {
+    display: block;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 12px;
+    white-space: pre-wrap; /* Preserves line breaks and spaces */
+    word-break: break-word;
+}
+
+.inputBase {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.zipCodeFilter {
+    composes: inputBase;
+    width: 200px;
+}
+
+.notificationInput {
+    composes: inputBase;
+    width: 100%;
+}
+
+.zipCodeTags {
+    composes: inputBase;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 38px;
+    background-color: white;
+}
+
+.zipCodeTags input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 150px;
+    font-size: 14px;
+    padding: 0;
+}
+
+.zipCodeTags input::placeholder {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.notificationInput::placeholder {
+    color: #6c757d;
+    font-size: 14px;
+}

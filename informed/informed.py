@@ -14,14 +14,17 @@ from typing import cast, Any
 from informed.db_models.users import User
 from fastapi import HTTPException, status
 from informed.users.manager import UserManager
+from informed.services.notification_service import NotificationService
+from redis.asyncio import Redis
 
 
 class InformedManager:
-    def __init__(self, config: Config, llm_client: LLMClient):
+    def __init__(self, config: Config, llm_client: LLMClient, redis_client: Redis):
         self.config = config
-        self.query_manager = QueryManager()
         self.user_manager = UserManager(config)
         self.llm_client = llm_client
+        self.notification_service = NotificationService(config, redis_client)
+        self.query_manager = QueryManager()
         self._lock_var: ContextVar[asyncio.Lock] = ContextVar("lock_var")
         self._query_tasks: dict[UUID, asyncio.Task] = {}
         self._user_tasks: dict[UUID, asyncio.Task] = {}
@@ -108,6 +111,7 @@ class InformedManager:
             user_manager=self.user_manager,
             llm_client=self.llm_client,
             weather_sources_config=self.config.weather_sources_config,
+            notification_service=self.notification_service,
         )
         query_task = asyncio.create_task(query_agent.run())
         # self._query_tasks[query_id] = query_task

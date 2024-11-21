@@ -16,6 +16,7 @@ from informed.api.chat_query import chat_query_router
 from informed.api.user import user_router
 from informed.api.weather import weather_router
 from informed.api.health import router as health_router
+from informed.api.admin import admin_router
 from informed.config import Config
 from informed.db import init_db
 from informed.redis import init_redis_client
@@ -61,7 +62,7 @@ def create_app(config: Config) -> FastAPI:
     llm_client = LLMClient(config.llm_config)
     app.state.llm_client = llm_client
 
-    app_manager = InformedManager(config, llm_client)
+    app_manager = InformedManager(config, llm_client, redis_client)
     app.state.app_manager = app_manager
 
     # Initialize the job scheduler
@@ -80,6 +81,7 @@ def create_app(config: Config) -> FastAPI:
     api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
     api_v1_router.include_router(weather_router, prefix="/weather", tags=["weather"])
     api_v1_router.include_router(health_router, prefix="/health", tags=["health"])
+    api_v1_router.include_router(admin_router, prefix="/admin", tags=["admin"])
 
     app.include_router(api_v1_router, prefix="/api/v1")
 

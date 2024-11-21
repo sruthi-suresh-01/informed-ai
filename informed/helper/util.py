@@ -12,6 +12,10 @@ from datetime import datetime, UTC
 from informed.config import WeatherSourcesConfig
 from typing import Any, Optional
 from loguru import logger as log
+from sqlalchemy import select
+from informed.db import session_maker
+from informed.db_models.notifications import WeatherNotification
+from informed.services.notification_service import NotificationService
 
 APP_ENV = os.getenv("APP_ENV", "DEV")
 
@@ -304,7 +308,9 @@ def build_air_quality_context(
 
 
 async def build_weather_query_context(
-    user: User, weather_sources_config: WeatherSourcesConfig
+    user: User,
+    weather_sources_config: WeatherSourcesConfig,
+    notification_service: NotificationService,
 ) -> str:
     if not user.details or not user.details.zip_code:
         raise ValueError("User details or zip code not found")
@@ -312,6 +318,11 @@ async def build_weather_query_context(
     # Get weather data
     weather_data = await get_weather_data(
         weather_sources_config, zip_code=user.details.zip_code
+    )
+
+    # Get active notifications from Redis
+    notifications = await notification_service.get_active_notifications(
+        user.details.zip_code
     )
 
     # Extract coordinates from weather data
@@ -327,6 +338,7 @@ async def build_weather_query_context(
     )
 
     context = ""
+
     if weather_data:
         location = weather_data["location"]
         current = weather_data["current"]
@@ -352,6 +364,14 @@ async def build_weather_query_context(
 
     # Add air quality context
     context += build_air_quality_context(air_quality_data, source="airnow")
+
+    # Add notifications to context if any exist
+    if notifications:
+        context += "\nActive Weather Notifications:\n"
+        for notification in notifications:
+            context += (
+                f"- {notification['message']} (expires: {notification['expires_at']})\n"
+            )
 
     return context
 

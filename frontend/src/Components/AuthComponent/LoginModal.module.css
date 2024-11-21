@@ -5,7 +5,10 @@
 
 .loginlogoutContainer {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
 }
 
 .loginButton {
@@ -157,4 +160,70 @@
     right: 10px;
     cursor: pointer;
     font-size: 15px;
+  }
+
+  .logoutButton {
+    background-color: white;
+    color: #008080;  /* Matching the teal theme */
+    border: 1px solid #008080;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .logoutButton:hover {
+    background-color: #f8f9fa;
+    color: #006666;
+    border-color: #006666;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .adminButton {
+    background-color: #008080;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+  }
+
+  .adminButton:hover {
+    background-color: #006666;
+  }
+
+  .userInfo {
+    color: #333;
+    font-size: 16px;
+    margin-right: 10px;
+  }
+
+  .menuContainer {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .accountIcon {
+    color: white !important;
+    background-color: #008080 !important;
+    border-radius: 50%;
+    padding: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid #008080;
+  }
+
+  .accountIcon:hover {
+    background-color: #006666 !important;
+    transform: scale(1.05);
+  }
+
+  .avatar {
+    background-color: #008080 !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
   }
