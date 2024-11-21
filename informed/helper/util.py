@@ -10,7 +10,7 @@ import os
 from textwrap import dedent
 from datetime import datetime, UTC
 from informed.config import WeatherSourcesConfig
-from typing import Any
+from typing import Any, Optional
 from loguru import logger as log
 
 APP_ENV = os.getenv("APP_ENV", "DEV")
@@ -52,6 +52,10 @@ def build_system_prompt() -> str:
 async def get_weather_data(
     weather_sources_config: WeatherSourcesConfig, zip_code: str
 ) -> dict[str, Any]:
+    # Check for demo zip code
+    if zip_code == "12345":
+        return get_mock_weather_data()
+
     if (
         not weather_sources_config.weatherapi
         or not weather_sources_config.weatherapi.api_key
@@ -86,7 +90,6 @@ async def get_weather_data(
                     "cloud": raw_weather_data["current"]["cloud"],
                     "feelslike_c": raw_weather_data["current"]["feelslike_c"],
                     "feelslike_f": raw_weather_data["current"]["feelslike_f"],
-                    "air_quality": raw_weather_data["current"]["air_quality"],
                 },
                 "forecast": {
                     "forecastday": [
@@ -106,7 +109,6 @@ async def get_weather_data(
                                     "precip_in": hour["precip_in"],
                                     "humidity": hour["humidity"],
                                     "feelslike_f": hour["feelslike_f"],
-                                    "air_quality": hour["air_quality"],
                                 }
                                 for hour in raw_weather_data["forecast"]["forecastday"][
                                     0
@@ -123,15 +125,206 @@ async def get_weather_data(
         return {}
 
 
+def get_mock_weather_data() -> dict[str, Any]:
+    """Return mock weather data for demo purposes with poor air quality conditions"""
+    return {
+        "location": {
+            "name": "Demo City",
+            "region": "Demo Region",
+            "country": "Demo Country",
+            "lat": 34.0522,
+            "lon": -118.2437,
+        },
+        "current": {
+            "last_updated_epoch": int(datetime.now(UTC).timestamp()),
+            "last_updated": datetime.now(UTC).isoformat(),
+            "temp_c": 28,  # Hot summer day
+            "temp_f": 82,
+            "is_day": 1,
+            "condition": {"text": "Hazy"},  # Changed to reflect poor air quality
+            "wind_mph": 3,  # Light wind - contributes to poor air quality
+            "wind_degree": 180,
+            "wind_dir": "S",
+            "precip_in": 0,
+            "humidity": 65,  # Higher humidity
+            "cloud": 20,
+            "feelslike_c": 30,  # Feels hotter due to humidity
+            "feelslike_f": 86,
+        },
+        "forecast": {
+            "forecastday": [
+                {
+                    "date": datetime.now(UTC).date().isoformat(),
+                    "day": {
+                        "maxtemp_f": 88,
+                        "mintemp_f": 75,
+                        "condition": {"text": "Hazy sunshine"},
+                        "daily_chance_of_rain": 0,  # No rain to clear the air
+                    },
+                    "hour": [
+                        {
+                            "time": f"{h:02d}:00",
+                            "temp_f": 75
+                            + (h if h < 14 else 28 - h),  # Temperature curve
+                            "condition": {"text": "Hazy"},
+                            "wind_mph": 3
+                            + (h if h < 12 else 24 - h) / 4,  # Light wind pattern
+                            "precip_in": 0,
+                            "humidity": 65 + (h if h < 12 else 24 - h),
+                            "feelslike_f": 77 + (h if h < 14 else 28 - h),
+                        }
+                        for h in range(24)
+                    ],
+                }
+            ]
+        },
+        "alerts": {
+            "alert": [
+                {
+                    "headline": "Air Quality Alert",
+                    "event": "Unhealthy Air Quality",
+                    "desc": "The Air Quality Index is forecasted to reach unhealthy levels for sensitive groups. Children, older adults, and people with respiratory conditions should limit outdoor activities.",
+                }
+            ]
+        },
+    }
+
+
+async def get_air_quality_data(
+    weather_sources_config: WeatherSourcesConfig,
+    latitude: float,
+    longitude: float,
+    zip_code: str,
+) -> Optional[dict[str, Any]]:
+    """Fetch air quality data from configured source."""
+    # Check for demo zip code
+    if zip_code == "12345":
+        return get_mock_air_quality_data()
+
+    # Hardcoded to AirNow for now
+    source = "airnow"
+
+    if source == "google":
+        return await get_google_air_quality_data(
+            weather_sources_config, latitude, longitude
+        )
+    else:
+        return await get_airnow_quality_data(weather_sources_config, zip_code)
+
+
+async def get_google_air_quality_data(
+    weather_sources_config: WeatherSourcesConfig,
+    latitude: float,
+    longitude: float,
+) -> dict[str, Any]:
+    """Fetch air quality data from Google Maps API."""
+    if not weather_sources_config.google or not weather_sources_config.google.api_key:
+        log.warning("Google API configuration not found")
+        raise ValueError("Google API configuration not found")
+
+    url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={weather_sources_config.google.api_key}"
+    headers = {"Content-Type": "application/json"}
+
+    # Following the example from documentation
+    payload = {
+        "universalAqi": True,
+        "location": {"latitude": latitude, "longitude": longitude},
+        "extraComputations": [
+            "HEALTH_RECOMMENDATIONS",
+            "DOMINANT_POLLUTANT_CONCENTRATION",
+            "POLLUTANT_CONCENTRATION",
+            "LOCAL_AQI",
+            "POLLUTANT_ADDITIONAL_INFO",
+        ],
+        "languageCode": "en",
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if not isinstance(data, dict):
+                log.error("Unexpected response format from Google Air Quality API")
+                raise ValueError(
+                    "Unexpected response format from Google Air Quality API"
+                )
+            return data
+    except Exception as e:
+        log.error(f"Error fetching air quality data: {str(e)}")
+        raise ValueError("Error fetching air quality data")
+
+
+def build_air_quality_context(
+    air_quality_data: Optional[dict[str, Any]], source: str = "airnow"
+) -> str:
+    """Build context string based on air quality source"""
+    if not air_quality_data:
+        return ""
+
+    context = "\nDetailed Air Quality Information:\n"
+
+    if source == "google":
+        # Add Google-specific context formatting
+        context += f"Time: {air_quality_data['dateTime']}\n"
+        context += f"Region: {air_quality_data['regionCode']}\n"
+
+        for idx in air_quality_data["indexes"]:
+            context += f"AQI ({idx['code']}): {idx['aqi']} - {idx['category']}\n"
+
+        if "pollutants" in air_quality_data:
+            context += "\nPollutant Concentrations:\n"
+            for pollutant in air_quality_data["pollutants"]:
+                context += f"{pollutant['displayName']}: {pollutant['concentration']['value']} {pollutant['concentration']['units']}\n"
+
+        if "healthRecommendations" in air_quality_data:
+            context += "\nHealth Recommendations:\n"
+            for group, recommendation in air_quality_data[
+                "healthRecommendations"
+            ].items():
+                readable_group = " ".join(
+                    word.capitalize() for word in group.split("_")
+                )
+                context += f"- {readable_group}: {recommendation}\n"
+    else:
+        # AirNow-specific context formatting
+        context += f"Time: {air_quality_data['dateTime']}\n"
+        context += f"Region: {air_quality_data['regionCode']}\n"
+
+        # Display PM2.5 AQI and category
+        pm25_index = air_quality_data["indexes"][0]  # We know this is PM2.5 now
+        context += f"PM2.5 AQI: {pm25_index['aqi']} - {pm25_index['category']}\n"
+
+        if "pollutants" in air_quality_data:
+            context += "\nAll Pollutant Readings:\n"
+            for pollutant in air_quality_data["pollutants"]:
+                context += f"{pollutant['displayName']}: {pollutant['concentration']['value']} {pollutant['concentration']['units']}\n"
+
+    return context
+
+
 async def build_weather_query_context(
     user: User, weather_sources_config: WeatherSourcesConfig
 ) -> str:
     if not user.details or not user.details.zip_code:
         raise ValueError("User details or zip code not found")
+
+    # Get weather data
     weather_data = await get_weather_data(
         weather_sources_config, zip_code=user.details.zip_code
     )
-    # TODO: add fallback to get weather from user's location
+
+    # Extract coordinates from weather data
+    latitude = float(weather_data["location"]["lat"])
+    longitude = float(weather_data["location"]["lon"])
+
+    # Get air quality data
+    air_quality_data = await get_air_quality_data(
+        weather_sources_config,
+        latitude=latitude,
+        longitude=longitude,
+        zip_code=user.details.zip_code,
+    )
 
     context = ""
     if weather_data:
@@ -143,9 +336,6 @@ async def build_weather_query_context(
         context += f"Current Weather: {current['temp_f']}°F (feels like {current['feelslike_f']}°F), {current['condition']['text']}\n"
         context += f"Wind: {current['wind_mph']} mph from {current['wind_dir']}\n"
         context += f"Humidity: {current['humidity']}%, Precipitation: {current['precip_in']} inches\n"
-        context += (
-            f"Air Quality Index (US EPA): {current['air_quality']['us-epa-index']}\n\n"
-        )
 
         context += f"Today's Forecast:\n"
         context += f"High: {forecast['maxtemp_f']}°F, Low: {forecast['mintemp_f']}°F\n"
@@ -159,6 +349,10 @@ async def build_weather_query_context(
                 context += (
                     f"Alert: {alert.get('event', 'N/A')}; {alert.get('desc', 'N/A')}\n"
                 )
+
+    # Add air quality context
+    context += build_air_quality_context(air_quality_data, source="airnow")
+
     return context
 
 
@@ -326,3 +520,79 @@ to business domain to extract good results without losing important context
 #     doc = nlp(question)
 #     keywords = [token.lemma_ for token in doc if token.pos_ in ['NOUN', 'VERB', 'ADJ']]
 #     return keywords
+
+
+async def get_airnow_quality_data(
+    weather_sources_config: WeatherSourcesConfig,
+    zip_code: str,
+) -> Optional[dict[str, Any]]:
+    """Fetch current air quality data from AirNow API, focusing on PM2.5."""
+    if not weather_sources_config.airnow or not weather_sources_config.airnow.api_key:
+        log.warning("AirNow API configuration not found")
+        return None
+
+    url = f"https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode={zip_code}&distance=25&API_KEY={weather_sources_config.airnow.api_key}"
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            if not data:
+                return None
+
+            # Find PM2.5 reading
+            pm25_data = next(
+                (item for item in data if item["ParameterName"] == "PM2.5"), None
+            )
+            if not pm25_data:
+                return None
+
+            # Format datetime string
+            observation_datetime = f"{pm25_data['DateObserved']} {pm25_data['HourObserved']:02d}:00 {pm25_data['LocalTimeZone']}"
+
+            return {
+                "dateTime": observation_datetime,
+                "regionCode": f"{pm25_data['StateCode']}-{pm25_data['ReportingArea']}",
+                "indexes": [
+                    {
+                        "code": "PM2.5",
+                        "aqi": pm25_data["AQI"],
+                        "category": pm25_data["Category"]["Name"],
+                    }
+                ],
+                "pollutants": [
+                    {
+                        "displayName": item["ParameterName"],
+                        "concentration": {"value": item["AQI"], "units": "AQI"},
+                    }
+                    for item in data
+                ],
+            }
+    except Exception as e:
+        log.error(f"Error fetching AirNow air quality data: {str(e)}")
+        return None
+
+
+def get_mock_air_quality_data() -> dict[str, Any]:
+    """Return mock air quality data showing poor conditions"""
+    return {
+        "dateTime": datetime.now(UTC).isoformat(),
+        "regionCode": "DEMO-Region",
+        "indexes": [{"code": "PM2.5", "aqi": 98, "category": "Bad"}],
+        "pollutants": [
+            {"displayName": "PM2.5", "concentration": {"value": 158, "units": "AQI"}},
+            {
+                "displayName": "O3",
+                "concentration": {
+                    "value": 125,  # Unhealthy for Sensitive Groups (101-150)
+                    "units": "AQI",
+                },
+            },
+            {
+                "displayName": "PM10",
+                "concentration": {"value": 95, "units": "AQI"},  # Moderate (51-100)
+            },
+        ],
+    }

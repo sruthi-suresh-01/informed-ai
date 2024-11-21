@@ -4,6 +4,7 @@ import tiktoken
 from loguru import logger
 
 
+# TODO: ChatState should probably be managed by a future chat manager once we have a chat history
 class ChatState:
     def __init__(self, system_prompt: str, user_prompt: str):
         self.messages: list = [

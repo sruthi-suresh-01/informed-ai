@@ -10,19 +10,34 @@ import os
 
 class WeatherSource(str, Enum):
     WEATHERAPI = "weatherapi"
+    GOOGLE = "google"
+    AIRNOW = "airnow"
 
 
-class WeatherSourceConfig(BaseModel):
+class WeatherDataSourceConfig(BaseModel):
     source: WeatherSource
     api_key: str | None = None
 
 
-class WeatherAPIConfig(WeatherSourceConfig):
+class WeatherAPIConfig(WeatherDataSourceConfig):
     source: WeatherSource = WeatherSource.WEATHERAPI
+    api_key: str | None = None
+
+
+class GoogleWeatherConfig(WeatherDataSourceConfig):
+    source: WeatherSource = WeatherSource.GOOGLE
+    api_key: str | None = None
+
+
+class AirNowConfig(WeatherDataSourceConfig):
+    source: WeatherSource = WeatherSource.AIRNOW
+    api_key: str | None = None
 
 
 class WeatherSourcesConfig(BaseModel):
     weatherapi: WeatherAPIConfig | None = None
+    google: GoogleWeatherConfig | None = None
+    airnow: AirNowConfig | None = None
 
 
 class SafeDumpableModel(BaseModel):

@@ -61,6 +61,8 @@ spec:
               value: {{ .Values.llm.openai.model }}
             - name: WEATHER_SOURCES_CONFIG__WEATHERAPI__API_KEY
               value: {{ .Values.weatherSources.weatherapi.apiKey }}
+            - name: WEATHER_SOURCES_CONFIG__AIRNOW__API_KEY
+              value: {{ .Values.weatherSources.airnow.apiKey }}
             - name: UI_CONFIG__WEB_URL
               value: https://{{ .Values.hostname }}/
             - name: INSTANCE_NAME

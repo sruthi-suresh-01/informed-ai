@@ -43,7 +43,9 @@ def run_ui():
     ui_dir = os.path.join(os.getcwd(), "frontend")
     log.info("Starting UI in directory: {}", ui_dir)
     try:
-        subprocess.run(["npm", "run", "dev"], cwd=ui_dir, check=True)  # noqa: S603
+        subprocess.run(
+            ["npm", "run", "dev", "--no-open"], cwd=ui_dir, check=True
+        )  # noqa: S603
     except subprocess.CalledProcessError as e:
         log.error("Failed to start UI: {}", str(e))
     except FileNotFoundError:
@@ -103,26 +105,23 @@ if __name__ == "__main__":
 
     db_connection_string = os.getenv("DATABASE_CONFIG__DB_URL")
 
-    # If DATABASE_CONFIG__DB_URL is not provided, create a new DB
-    if db_connection_string is None:
-        try:
-            with RedisContainer(image="redis:latest") as redis_container:
-                redis_container.start()
-                redis_host = redis_container.get_container_host_ip()
-                redis_port = redis_container.get_exposed_port(6379)
-                os.environ["REDIS_CONFIG__HOST"] = redis_host
-                os.environ["REDIS_CONFIG__PORT"] = redis_port
-                log.info("Redis container started on port {}", redis_port)
+    try:
+        with RedisContainer(image="redis:latest") as redis_container:
+            redis_container.start()
+            redis_host = redis_container.get_container_host_ip()
+            redis_port = redis_container.get_exposed_port(6379)
+            os.environ["REDIS_CONFIG__HOST"] = redis_host
+            os.environ["REDIS_CONFIG__PORT"] = redis_port
+            log.info("Redis container started on port {}", redis_port)
 
+            if db_connection_string is None:
                 with PostgresContainer(
                     "postgres:latest", driver="psycopg"
                 ).with_bind_ports(5432, 5432) as postgres:
-
                     db_connection_string = postgres.get_connection_url()
                     os.environ["DATABASE_CONFIG__DB_URL"] = db_connection_string
                     start_server(db_connection_string)
-        except Exception as e:
-            log.error("Failed to start server: {}", str(e))
-
-    else:
-        start_server(db_connection_string)
+            else:
+                start_server(db_connection_string)
+    except Exception as e:
+        log.error("Failed to start server: {}", str(e))

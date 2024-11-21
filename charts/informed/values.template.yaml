@@ -197,6 +197,8 @@ llm:
 weatherSources:
   weatherapi:
     apiKey: "$WEATHER_SOURCES_CONFIG__WEATHERAPI__API_KEY"
+  airnow:
+    apiKey: "$WEATHER_SOURCES_CONFIG__AIRNOW__API_KEY"
 
 opentelemetry:
   enabled: false

@@ -8,6 +8,7 @@ function App() {
       <HOCLayout>
         <Routes>
             <Route path="/" element={<ChatScreen />} />
+            {/* <Route path="/admin" element={<AdminScreen />} /> */}
           </Routes>
 
       </HOCLayout>

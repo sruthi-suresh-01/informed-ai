@@ -77,7 +77,7 @@ class InformedManager:
     async def _start_query(self, query: Query) -> QueryResponse:
         initial_query_state = query.state
         query_id = query.query_id
-        timeout = 10
+        timeout = 10  # TODO: Make this configurable
 
         # Cancel all tasks for the user since we only process last query
         await self.cancel_user_tasks(query.user_id)
