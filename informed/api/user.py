@@ -19,6 +19,7 @@ from informed.api.schema import (
 )
 from informed.db import session_maker
 from informed.db_models.users import (
+    AccountType,
     User,
     UserDetails,
     UserHealthConditions,
@@ -58,7 +59,7 @@ async def register_user(
             new_user = User(
                 email=user.email,
                 is_active=True,
-                account_type="user",
+                account_type=AccountType.USER,
             )
             new_user.details = UserDetails(
                 user_id=new_user.id,

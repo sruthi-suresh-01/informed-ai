@@ -7,11 +7,9 @@ from sqlalchemy import create_engine
 from testcontainers.postgres import PostgresContainer
 
 from informed.db_models import (  # noqa: F401
-    Activity,
     Language,
     User,
     UserDetails,
-    UserLanguage,
     UserMedicalDetails,
 )
 

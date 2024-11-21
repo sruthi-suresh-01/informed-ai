@@ -20,13 +20,21 @@ from sqlmodel import Field, Relationship, SQLModel
 from typing import Any
 
 
+class AccountType(str, Enum):
+    USER = "user"
+    ADMIN = "admin"
+    SUPERADMIN = "superadmin"
+
+
 class User(SQLModel, table=True):
     __tablename__ = "users"  #  type: ignore
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     email: str = Field(sa_column=Column(String(100), unique=True, nullable=False))
     is_active: bool = Field(sa_column=Column(Boolean))
-    account_type: str = Field(sa_column=Column(String))
+    account_type: AccountType = Field(
+        default=AccountType.USER, sa_column=Column(SQLAlchemyEnum(AccountType))
+    )
 
     details: Optional["UserDetails"] = Relationship(
         sa_relationship=relationship(
