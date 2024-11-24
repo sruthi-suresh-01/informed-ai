@@ -1,16 +1,16 @@
 postgresql:
   enabled: true
   auth:
-    username: db_username
-    password: db_password
+    username: postgres
+    password: password
     database: postgres
     postgresPassword: password
 
 global:
   postgresql:
     auth:
-      username: db_username
-      password: db_password
+      username: postgres
+      password: password
       database: postgres
       postgresPassword: password
     host: postgres
@@ -37,9 +37,7 @@ ingress:
     kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "informed-app-static-ip"
     kubernetes.io/ingress.backend-protocol: HTTPS
-    # Add SSL redirect annotation
-    # cloud.google.com/backend-config: '{"default": {"healthCheck": {"checkIntervalSec": 30, "timeoutSec": 5, "healthyThreshold": 1, "unhealthyThreshold": 2}}}'
-    ingress.gcp.kubernetes.io/pre-shared-cert: "managed-cert"
+    networking.gke.io/managed-certificates: informed-cert
 
 certmanager:
   enabled: false  # Disable cert-manager as we're not using a custom domain

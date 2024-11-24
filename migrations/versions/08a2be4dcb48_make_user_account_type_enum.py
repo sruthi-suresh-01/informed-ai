@@ -22,7 +22,16 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # First create the enum type
+    # First update existing values to match enum case
+    op.execute(
+        """
+        UPDATE users
+        SET account_type = UPPER(account_type)
+        WHERE account_type IS NOT NULL
+    """
+    )
+
+    # Create the enum type
     op.execute("CREATE TYPE accounttype AS ENUM ('USER', 'ADMIN', 'SUPERADMIN')")
 
     # Then alter the column with explicit USING clause

@@ -140,7 +140,6 @@ ingress:
     # Force HTTPS by setting allow-http to false
     kubernetes.io/ingress.allow-http: "false"
     # Add SSL redirect annotation
-    ingress.gcp.kubernetes.io/pre-shared-cert: "managed-cert"
 
 service:
   ui:

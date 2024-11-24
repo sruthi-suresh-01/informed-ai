@@ -7,16 +7,13 @@ metadata:
     {{- if .Values.ingress.annotations }}
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
     {{- end }}
-    # These annotations enforce HTTPS
-    kubernetes.io/ingress.allow-http: "false"
-    networking.gke.io/managed-certificates: {{ include "informed-core.fullname" . }}-cert
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
   - host: {{ .Values.hostname }}
     http:
       paths:
-      - path: /api     # This means all API calls need /api prefix
+      - path: /api
         pathType: Prefix
         backend:
           service:
