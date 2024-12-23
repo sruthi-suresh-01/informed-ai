@@ -62,11 +62,13 @@ async def register_user(
                 account_type=AccountType.USER,
             )
             new_user.details = UserDetails(
-                user_id=new_user.id,
+                user_id=new_user.user_id,
                 first_name=user.first_name,
                 last_name=user.last_name,
             )
-            new_user.medical_details = UserMedicalDetails.create(user_id=new_user.id)
+            new_user.medical_details = UserMedicalDetails.create(
+                user_id=new_user.user_id
+            )
             session.add(new_user)
             try:
                 await session.commit()
@@ -149,7 +151,7 @@ async def set_user_details(
         # Handle the user details
         if not user.details:
             user.details = UserDetails(
-                user_id=user.id,
+                user_id=user.user_id,
                 first_name=details.first_name,
                 last_name=details.last_name,
             )
@@ -222,7 +224,7 @@ async def set_medical_details(
             if user.medical_details:
                 medical_details = user.medical_details
             else:
-                medical_details = UserMedicalDetails(user_id=user.id)
+                medical_details = UserMedicalDetails(user_id=user.user_id)
                 # db.add(medical_details)
 
             medical_details.blood_type = details.blood_type

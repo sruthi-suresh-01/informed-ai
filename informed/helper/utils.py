@@ -2,11 +2,12 @@ import traceback
 
 import json
 
-from fastapi import Request, Cookie, HTTPException, status
+from fastapi import Request, Cookie, HTTPException, status, Depends
 from sqlalchemy.future import select
 
 from informed.db import session_maker
 from informed.db_models.users import User
+from typing import Annotated
 
 
 async def get_current_user(request: Request, session_token: str = Cookie(None)) -> User:
@@ -47,6 +48,9 @@ async def get_current_user(request: Request, session_token: str = Cookie(None)) 
         return user
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
+
+
+UserDep = Annotated[User, Depends(get_current_user)]
 
 
 def get_concise_exception_traceback(exc: Exception, num_lines: int = 2) -> str:

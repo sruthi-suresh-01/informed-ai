@@ -5,7 +5,6 @@ from openai.types.chat import ChatCompletionToolParam
 from pydantic import BaseModel
 
 
-# TODO (peter): make our llm interface compatible with instructor and use that instead
 def build_function_schema(
     model: type[BaseModel], name: str | None = None, description: str | None = None
 ) -> ChatCompletionToolParam:

@@ -6,17 +6,25 @@ import { Constants } from "../../Config/Constants";
 const api_urls = Constants.apis
 const chatActions = actions.chat
 
-export const submitQuestion = (query) => dispatch => {
+export const addUserMessage = (message, chatThreadID=null, responseType="text") => dispatch => {
     dispatch(chatActions.chatUserMessageRequest());
-    if(query) {
-        apiClient.post(api_urls.submit, { query })
+    if(message) {
+        let apiUrl = api_urls.addUserMessage
+        let payload = {
+            message,
+            requested_response_type: responseType
+        }
+        if(chatThreadID) {
+            apiUrl = apiUrl + "/" + chatThreadID
+            payload["chat_thread_id"] = chatThreadID
+        }
+        apiClient.post(apiUrl, payload)
             .then(response => {
                 const data = response.data;
                 if (data.error) {
                     dispatch(chatActions.chatUserMessageFailure(data.error));
                 } else {
-                    const queryId = data && data.id || ''
-                    dispatch(chatActions.chatUserMessageSuccess({ query, queryId }));
+                    dispatch(chatActions.chatUserMessageSuccess(data));
                 }
             })
             .catch(error => {
@@ -25,25 +33,28 @@ export const submitQuestion = (query) => dispatch => {
     }
 }
 
-export const getQuestionAndFacts = () => dispatch => {
+export const getChatThread = (chatThreadId) => dispatch => {
+    if (!chatThreadId) {
+        // TODO: Raise error here
+        return;
+    }
     dispatch(chatActions.chatAgentPollRequest());
-    apiClient.get(api_urls.generateResponse)
+    apiClient.get(api_urls.getChatThread + "/" + chatThreadId)
         .then(response => {
             const data = response.data
             if (data.error) {
                 dispatch(chatActions.chatAgentPollFailure(data.error));
             } else {
-                if (data.state != 'completed') {
-                    console.info('Data is still processing, retrying...');
-                } else {
-                    console.info('Processing complete');
-                    dispatch(chatActions.chatAgentPollSuccess(data));
-                }
-
+                dispatch(chatActions.chatAgentPollSuccess(data));
             }
         })
         .catch(error => {
             console.log("chat error")
             dispatch(chatActions.chatAgentPollFailure(error.message))
         });
+}
+
+
+export const setCurrentChatThreadId = (chatThreadId=null) => dispatch => {
+    dispatch(chatActions.setCurrentChatThreadId(chatThreadId));
 }

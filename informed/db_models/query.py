@@ -12,10 +12,12 @@ from informed.db_models.shared_types import EnumAsString, JSONBFromPydantic
 class QueryState(Enum):
     CREATED = "created"
     PENDING = "pending"
-    PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+    def is_terminated(self) -> bool:
+        return self in [QueryState.COMPLETED, QueryState.FAILED, QueryState.CANCELLED]
 
 
 class QuerySource(BaseModel):
@@ -28,7 +30,7 @@ class Query(SQLModel, table=True):
 
     query: str = Field(nullable=False)
     query_id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id")
+    user_id: UUID = Field(foreign_key="users.user_id")
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
     sources: list[QuerySource] = Field(
@@ -38,4 +40,4 @@ class Query(SQLModel, table=True):
         default=QueryState.CREATED,
         sa_column=Column(EnumAsString(QueryState), nullable=False),
     )
-    findings: list[str] = Field(sa_column=Column(JSONB), default_factory=list)
+    answer: str | None = Field(default=None)

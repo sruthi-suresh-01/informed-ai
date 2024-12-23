@@ -18,13 +18,13 @@ class LLMClient:
         )
 
     async def chat_completion(
-        self, chat_state: ChatState, tools: list[Any]
+        self, chat_state: ChatState, tools: list[Any], max_tokens: int | None = None
     ) -> Function:
         response = await self.client.chat.completions.create(
             model=self.config.llm_model,
             messages=chat_state.messages,
             temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
+            max_tokens=max_tokens or self.config.max_tokens,
             tools=tools,
         )
         if (

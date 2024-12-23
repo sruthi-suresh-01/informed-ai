@@ -14,7 +14,7 @@ class UserManager:
     async def get_user(self, user_id: UUID) -> User:
         async with session_maker() as session:
             result = await session.execute(
-                select(User).filter(cast(ColumnElement[bool], User.id == user_id))
+                select(User).filter(cast(ColumnElement[bool], User.user_id == user_id))
             )
             user = result.unique().scalar_one_or_none()
         if not user:

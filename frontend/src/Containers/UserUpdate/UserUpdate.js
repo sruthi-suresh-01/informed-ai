@@ -20,7 +20,8 @@ const initialUserDetails = {
   }
 const languages =  [
     { value: "spanish", label: "Spanish" },
-    { value: "english", label: "English" }
+    { value: "english", label: "English" },
+    { value: "tagalog", label: "Tagalog" },
 ]
 
 const ethnicities = [

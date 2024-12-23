@@ -14,8 +14,8 @@ from typing import Any, Optional
 from loguru import logger as log
 from sqlalchemy import select
 from informed.db import session_maker
-from informed.db_models.notifications import WeatherNotification
-from informed.services.notification_service import NotificationService
+from informed.db_models.weather_alert import WeatherAlert
+from informed.services.weather_alert_service import WeatherAlertService
 
 APP_ENV = os.getenv("APP_ENV", "DEV")
 
@@ -32,20 +32,30 @@ zone_zip_map = {
 def build_system_prompt() -> str:
     system_prompt = dedent(
         f"""
-        You are a highly skilled AI weather advisor with expertise in analyzing weather conditions and providing personalized advice.
+        You are a highly skilled personal assistant that helps answers user questions.
+        Your main purpose is to help the user with questions about the weather, air quality, and health,
+        but you can also answer other questions as long as they have something to do with the user.
 
         Your role:
-        - Analyze current weather conditions and forecasts
-        - Provide personalized recommendations based on user health details and preferences
-        - Consider air quality, temperature, and other weather factors when giving advice
+        - Provide personalized responses, using the provided context if available
         - Respond in the user's preferred language when specified
+
 
         Guidelines for responses:
         - Be clear, concise, and friendly
         - Prioritize user safety and health considerations
-        - Provide specific, actionable advice
-        - If weather data is unavailable, acknowledge limitations in your response
-        - Format responses as clear, separate findings
+        - If required context is unavailable, acknowledge limitations in your response
+        - If context is irrelevant to the user's question, ignore it
+        - Pay close attention to any instructions provided
+        - ALWAYS use provided tools. You should NEVER respond without using the provided tools.
+
+
+        Example response:
+        User: Is it safe for me to go outside today?
+        <Context>
+        AQI: 100
+        </Context>
+        answer: Based on the air quality index, it is probably better to stay indoors today.
 
         The current date and time is {datetime.now(UTC).isoformat()}
         """
@@ -76,49 +86,56 @@ async def get_weather_data(
 
             # Extract only relevant weather information
             weather_data = {
-                "location": raw_weather_data["location"],
+                "location": raw_weather_data.get("location", ""),
                 "current": {
-                    "last_updated_epoch": raw_weather_data["current"][
+                    "last_updated_epoch": raw_weather_data.get("current", {}).get(
                         "last_updated_epoch"
-                    ],
-                    "last_updated": raw_weather_data["current"]["last_updated"],
-                    "temp_c": raw_weather_data["current"]["temp_c"],
-                    "temp_f": raw_weather_data["current"]["temp_f"],
-                    "is_day": raw_weather_data["current"]["is_day"],
-                    "condition": raw_weather_data["current"]["condition"],
-                    "wind_mph": raw_weather_data["current"]["wind_mph"],
-                    "wind_degree": raw_weather_data["current"]["wind_degree"],
-                    "wind_dir": raw_weather_data["current"]["wind_dir"],
-                    "precip_in": raw_weather_data["current"]["precip_in"],
-                    "humidity": raw_weather_data["current"]["humidity"],
-                    "cloud": raw_weather_data["current"]["cloud"],
-                    "feelslike_c": raw_weather_data["current"]["feelslike_c"],
-                    "feelslike_f": raw_weather_data["current"]["feelslike_f"],
+                    ),
+                    "last_updated": raw_weather_data.get("current", {}).get(
+                        "last_updated"
+                    ),
+                    "temp_c": raw_weather_data.get("current", {}).get("temp_c"),
+                    "temp_f": raw_weather_data.get("current", {}).get("temp_f"),
+                    "is_day": raw_weather_data.get("current", {}).get("is_day"),
+                    "condition": raw_weather_data.get("current", {}).get(
+                        "condition", {}
+                    ),
+                    "wind_mph": raw_weather_data.get("current", {}).get("wind_mph"),
+                    "wind_degree": raw_weather_data.get("current", {}).get(
+                        "wind_degree"
+                    ),
+                    "wind_dir": raw_weather_data.get("current", {}).get("wind_dir"),
+                    "precip_in": raw_weather_data.get("current", {}).get("precip_in"),
+                    "humidity": raw_weather_data.get("current", {}).get("humidity"),
+                    "cloud": raw_weather_data.get("current", {}).get("cloud"),
+                    "feelslike_c": raw_weather_data.get("current", {}).get(
+                        "feelslike_c"
+                    ),
+                    "feelslike_f": raw_weather_data.get("current", {}).get(
+                        "feelslike_f"
+                    ),
                 },
                 "forecast": {
                     "forecastday": [
                         {
-                            "date": raw_weather_data["forecast"]["forecastday"][0][
-                                "date"
-                            ],
-                            "day": raw_weather_data["forecast"]["forecastday"][0][
-                                "day"
-                            ],
+                            "date": forecast_day.get("date"),
+                            "day": forecast_day.get("day", {}),
                             "hour": [
                                 {
-                                    "time": hour["time"],
-                                    "temp_f": hour["temp_f"],
-                                    "condition": hour["condition"],
-                                    "wind_mph": hour["wind_mph"],
-                                    "precip_in": hour["precip_in"],
-                                    "humidity": hour["humidity"],
-                                    "feelslike_f": hour["feelslike_f"],
+                                    "time": hour.get("time"),
+                                    "temp_f": hour.get("temp_f"),
+                                    "condition": hour.get("condition", {}),
+                                    "wind_mph": hour.get("wind_mph"),
+                                    "precip_in": hour.get("precip_in"),
+                                    "humidity": hour.get("humidity"),
+                                    "feelslike_f": hour.get("feelslike_f"),
                                 }
-                                for hour in raw_weather_data["forecast"]["forecastday"][
-                                    0
-                                ]["hour"]
+                                for hour in forecast_day.get("hour", [])
                             ],
                         }
+                        for forecast_day in raw_weather_data.get("forecast", {}).get(
+                            "forecastday", []
+                        )
                     ]
                 },
                 "alerts": raw_weather_data.get("alerts", {"alert": []}),
@@ -310,7 +327,7 @@ def build_air_quality_context(
 async def build_weather_query_context(
     user: User,
     weather_sources_config: WeatherSourcesConfig,
-    notification_service: NotificationService,
+    weather_alert_service: WeatherAlertService,
 ) -> str:
     if not user.details or not user.details.zip_code:
         raise ValueError("User details or zip code not found")
@@ -320,8 +337,8 @@ async def build_weather_query_context(
         weather_sources_config, zip_code=user.details.zip_code
     )
 
-    # Get active notifications from Redis
-    notifications = await notification_service.get_active_notifications(
+    # Get active weather alerts from Redis
+    weather_alerts = await weather_alert_service.get_active_weather_alerts(
         user.details.zip_code
     )
 
@@ -340,24 +357,32 @@ async def build_weather_query_context(
     context = ""
 
     if weather_data:
-        location = weather_data["location"]
-        current = weather_data["current"]
-        forecast = weather_data["forecast"]["forecastday"][0]["day"]
+        location = weather_data.get("location", {})
+        current = weather_data.get("current", {})
+        forecast_days = weather_data.get("forecast", {}).get("forecastday", [])
 
-        context += f"Location: {location['name']}, {location['region']}, {location['country']}\n"
-        context += f"Current Weather: {current['temp_f']}°F (feels like {current['feelslike_f']}°F), {current['condition']['text']}\n"
-        context += f"Wind: {current['wind_mph']} mph from {current['wind_dir']}\n"
-        context += f"Humidity: {current['humidity']}%, Precipitation: {current['precip_in']} inches\n"
+        if forecast_days:
+            forecast = forecast_days[0].get("day", {})
 
-        context += f"Today's Forecast:\n"
-        context += f"High: {forecast['maxtemp_f']}°F, Low: {forecast['mintemp_f']}°F\n"
-        context += f"Condition: {forecast['condition']['text']}\n"
-        context += f"Chance of Rain: {forecast['daily_chance_of_rain']}%\n"
+            context += f"Location: {location.get('name', 'Unknown')}, {location.get('region', '')}, {location.get('country', '')}\n"
+            context += f"Current Weather: {current.get('temp_f', 'N/A')}°F (feels like {current.get('feelslike_f', 'N/A')}°F), {current.get('condition', {}).get('text', 'N/A')}\n"
+            context += f"Wind: {current.get('wind_mph', 'N/A')} mph from {current.get('wind_dir', 'N/A')}\n"
+            context += f"Humidity: {current.get('humidity', 'N/A')}%, Precipitation: {current.get('precip_in', 'N/A')} inches\n"
+
+            context += f"Today's Forecast:\n"
+            context += f"High: {forecast.get('maxtemp_f', 'N/A')}°F, Low: {forecast.get('mintemp_f', 'N/A')}°F\n"
+            context += (
+                f"Condition: {forecast.get('condition', {}).get('text', 'N/A')}\n"
+            )
+            context += (
+                f"Chance of Rain: {forecast.get('daily_chance_of_rain', 'N/A')}%\n"
+            )
 
         # Add any weather alerts if present
-        if weather_data.get("alerts", {}).get("alert"):
+        alerts = weather_data.get("alerts", {}).get("alert", [])
+        if alerts:
             context += "\nWeather Alerts:\n"
-            for alert in weather_data["alerts"]["alert"]:
+            for alert in alerts:
                 context += (
                     f"Alert: {alert.get('event', 'N/A')}; {alert.get('desc', 'N/A')}\n"
                 )
@@ -365,13 +390,11 @@ async def build_weather_query_context(
     # Add air quality context
     context += build_air_quality_context(air_quality_data, source="airnow")
 
-    # Add notifications to context if any exist
-    if notifications:
-        context += "\nActive Weather Notifications:\n"
-        for notification in notifications:
-            context += (
-                f"- {notification['message']} (expires: {notification['expires_at']})\n"
-            )
+    # Add weather alerts to context if any exist
+    if weather_alerts:
+        context += "\nActive Weather Alerts:\n"
+        for weather_alert in weather_alerts:
+            context += f"- {weather_alert['message']} (expires: {weather_alert['expires_at']})\n"
 
     return context
 

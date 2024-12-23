@@ -1,13 +1,19 @@
-from informed.db_models.query import Query, QueryState
+from informed.db_models.query import Query
 from uuid import UUID
 from informed.db import session_maker
 from sqlalchemy.sql import select, ColumnElement
 from typing import cast
 from informed.api.schema import UpdateQueryRequest, QueryResponse
+from informed.db_models.query import QueryState
+from asyncio import Event
+from datetime import datetime, timedelta
+import asyncio
 
 
 class QueryManager:
     def __init__(self) -> None:
+        self._query_updates: dict[UUID, Event] = {}
+        self._last_updates: dict[UUID, datetime] = {}
         # self.queries: dict[UUID, Query] = {}
         pass
 
@@ -23,14 +29,22 @@ class QueryManager:
             session.add(query)
             await session.commit()
 
-    async def get_query(self, query_id: UUID) -> Query | None:
+        # Signal that a query has been updated
+        if query.query_id in self._query_updates:
+            self._last_updates[query.query_id] = datetime.now()
+            self._query_updates[query.query_id].set()
+
+    async def get_query(self, query_id: UUID) -> Query:
         async with session_maker() as session:
             query = await session.execute(
                 select(Query)
                 .filter(cast(ColumnElement[bool], Query.query_id == query_id))
                 .with_for_update()
             )
-            return query.scalar_one_or_none()
+            result = query.scalar_one_or_none()
+            if result is None:
+                raise ValueError(f"Query {query_id} not found")
+            return result
 
     async def update_query(self, request: UpdateQueryRequest) -> QueryResponse:
         async with session_maker() as session:
@@ -57,3 +71,26 @@ class QueryManager:
                 .limit(1)
             )
             return query.scalar_one_or_none()
+
+    async def get_updated_query(
+        self, query_id: UUID, timeout: float | None = None
+    ) -> Query:
+        # Create event if it doesn't exist
+        if query_id not in self._query_updates:
+            self._query_updates[query_id] = Event()
+            self._last_updates[query_id] = datetime.now()
+
+        # Wait for the update event
+        try:
+            await asyncio.wait_for(
+                self._query_updates[query_id].wait(), timeout=timeout
+            )
+            self._query_updates[query_id].clear()
+            return await self.get_query(query_id)
+        except asyncio.TimeoutError:
+            return await self.get_query(query_id)
+        finally:
+            # Cleanup if no updates for a while
+            if datetime.now() - self._last_updates[query_id] > timedelta(minutes=30):
+                self._query_updates.pop(query_id, None)
+                self._last_updates.pop(query_id, None)

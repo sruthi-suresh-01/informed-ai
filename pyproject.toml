@@ -30,6 +30,7 @@ schedule = "^1.2.2"
 # Kept but skipped in deptry checks
 tenacity = "^9.0.0"
 slowapi = "^0.1.9"
+google-cloud-texttospeech = "^2.23.0"
 
 [tool.poetry.group.dev.dependencies]
 deptry = "^0.20.0"

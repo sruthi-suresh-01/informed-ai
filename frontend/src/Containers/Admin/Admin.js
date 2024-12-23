@@ -42,7 +42,7 @@ export function Admin() {
     }, [debouncedZipCode]);
 
     useEffect(() => {
-        dispatch(adminActions.fetchNotifications({
+        dispatch(adminActions.fetchWeatherAlerts({
             isActive: filters.isActive,
             zipCode: filters.zipCode
         }));
@@ -69,7 +69,7 @@ export function Admin() {
     const handleAddNotification = () => {
         if (!newNotification.message.trim() || newNotification.zipCodes.length === 0) return;
 
-        dispatch(adminActions.addNotification({
+        dispatch(adminActions.addWeatherAlert({
             ...newNotification,
             zipCode: newNotification.zipCodes[0] // For now, just use the first ZIP code
         }));
@@ -93,7 +93,7 @@ export function Admin() {
     };
 
     const handleCancelNotification = (notificationId) => {
-        dispatch(adminActions.cancelNotification(notificationId));
+        dispatch(adminActions.cancelWeatherAlert(notificationId));
     };
 
     const NotificationItem = ({ notification, onDelete }) => {

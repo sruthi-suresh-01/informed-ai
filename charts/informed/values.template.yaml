@@ -27,7 +27,7 @@ postgresql:
   enabled: true
   image:
     registry: gcr.io
-    repository: informed-436823/informed-pgvector
+    repository: informed-ai-prod/informed-pgvector
     tag: latest
     pullPolicy: Always
   auth:
@@ -187,6 +187,8 @@ redis:
       cpu: 50m
       memory: 64Mi
 
+google:
+  apiKey: "$GOOGLE_API_KEY"
 
 llm:
   openai:

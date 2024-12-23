@@ -14,6 +14,12 @@ from informed.db_models.users import (
 )
 
 from informed.db_models.query import QueryState, Query, QuerySource
+from informed.db_models.chat import (
+    Message,
+    MessageSource,
+    MessageResponseType,
+    ChatThread,
+)
 
 
 class CreateUserRequest(BaseModel):
@@ -225,7 +231,7 @@ class QueryResponse(BaseModel):
     query: str
     state: str
     sources: list[QuerySourceResponse]
-    findings: list[str]
+    answer: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -237,3 +243,58 @@ class QueryResponse(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str
+
+
+# Chat
+
+
+class ChatRequest(BaseModel):
+    message: str
+    source: MessageSource = MessageSource.WEBAPP
+    requested_response_type: MessageResponseType | None = None
+
+    def user_message(self, user_id: UUID | None, chat_thread_id: UUID) -> Message:
+        return Message(
+            content=self.message,
+            user_id=user_id,
+            chat_thread_id=chat_thread_id,
+            source=self.source,
+            requested_response_type=self.requested_response_type,
+        )
+
+
+class AddUserMessageRequest(ChatRequest):
+    chat_thread_id: UUID
+
+
+class ChatMessageResponse(BaseModel):
+    message_id: UUID
+    content: str
+    created_at: datetime
+    source: MessageSource
+    response_type: MessageResponseType | None = None
+    query_id: UUID | None = None
+
+    # Hiding these from the response until we need them
+    # user_id: UUID | None = None
+    # acknowledged: bool = False
+    # requested_response_type: MessagePresentationType | None = None
+
+    @classmethod
+    def from_chat_message(cls, message: Message) -> "ChatMessageResponse":
+        data = message.model_dump()
+        return cls.model_validate(data)
+
+
+class ChatResponse(BaseModel):
+    chat_thread_id: UUID
+    messages: list[ChatMessageResponse]
+
+    @classmethod
+    def from_chat_thread(cls, chat_thread: ChatThread) -> "ChatResponse":
+        data = chat_thread.model_dump()
+        data["messages"] = [
+            ChatMessageResponse.from_chat_message(message)
+            for message in chat_thread.messages
+        ]
+        return cls.model_validate(data)

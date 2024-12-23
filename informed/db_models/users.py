@@ -29,7 +29,7 @@ class AccountType(str, Enum):
 class User(SQLModel, table=True):
     __tablename__ = "users"  #  type: ignore
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    user_id: UUID = Field(default_factory=uuid4, primary_key=True)
     email: str = Field(sa_column=Column(String(100), unique=True, nullable=False))
     is_active: bool = Field(sa_column=Column(Boolean))
     account_type: AccountType = Field(
@@ -57,6 +57,7 @@ class User(SQLModel, table=True):
 class Language(str, Enum):
     ENGLISH = "english"
     SPANISH = "spanish"
+    TAGALOG = "tagalog"
     # Add more languages as needed
 
 
@@ -66,7 +67,7 @@ class UserDetails(SQLModel, table=True):
     user_id: UUID = Field(
         sa_column=Column(
             SQLAlchemyUuid(as_uuid=True),
-            ForeignKey("users.id", ondelete="CASCADE"),
+            ForeignKey("users.user_id", ondelete="CASCADE"),
             nullable=False,
             unique=True,
         )
@@ -104,7 +105,7 @@ class UserMedicalDetails(SQLModel, table=True):
     user_id: UUID = Field(
         sa_column=Column(
             SQLAlchemyUuid(as_uuid=True),
-            ForeignKey("users.id", ondelete="CASCADE"),
+            ForeignKey("users.user_id", ondelete="CASCADE"),
             nullable=False,
             unique=True,
         )

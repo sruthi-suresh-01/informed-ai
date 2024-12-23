@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, ColumnElement
 from typing import cast
 from informed.db import session_maker
-from informed.db_models.notifications import WeatherNotification
+from informed.db_models.weather_alert import WeatherAlert
 from informed.db_models.users import User, AccountType
 from informed.helper.utils import get_current_user
 
@@ -14,13 +14,13 @@ from informed.helper.utils import get_current_user
 admin_router = APIRouter()
 
 
-class WeatherNotificationCreate(BaseModel):
+class WeatherAlertCreate(BaseModel):
     zip_code: str
     message: str
     expires_at: datetime
 
 
-class WeatherNotificationResponse(BaseModel):
+class WeatherAlertResponse(BaseModel):
     id: UUID
     zip_code: str
     message: str
@@ -31,111 +31,109 @@ class WeatherNotificationResponse(BaseModel):
     is_active: bool
 
     @classmethod
-    def from_db(
-        cls, notification: WeatherNotification
-    ) -> "WeatherNotificationResponse":
-        notification_dict = {
-            "id": notification.id,
-            "zip_code": notification.zip_code,
-            "message": notification.message,
-            "created_by": notification.created_by,
-            "created_at": notification.created_at,
-            "expires_at": notification.expires_at,
-            "cancelled_at": notification.cancelled_at,
-            "is_active": notification.is_active,
+    def from_db(cls, weather_alert: WeatherAlert) -> "WeatherAlertResponse":
+        weather_alert_dict = {
+            "id": weather_alert.weather_alert_id,
+            "zip_code": weather_alert.zip_code,
+            "message": weather_alert.message,
+            "created_by": weather_alert.created_by,
+            "created_at": weather_alert.created_at,
+            "expires_at": weather_alert.expires_at,
+            "cancelled_at": weather_alert.cancelled_at,
+            "is_active": weather_alert.is_active,
         }
-        return cls.model_validate(notification_dict)
+        return cls.model_validate(weather_alert_dict)
 
 
-@admin_router.post("/notifications", response_model=WeatherNotificationResponse)
-async def create_notification(
+@admin_router.post("/weather-alerts", response_model=WeatherAlertResponse)
+async def create_weather_alert(
     request: Request,
-    notification: WeatherNotificationCreate,
+    weather_alert: WeatherAlertCreate,
     current_user: User = Depends(get_current_user),
-) -> WeatherNotificationResponse:
+) -> WeatherAlertResponse:
     if current_user.account_type not in [AccountType.ADMIN, AccountType.SUPERADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admin users can create notifications",
+            detail="Only admin users can create weather alerts",
         )
 
     async with session_maker() as session:
-        db_notification = WeatherNotification(
-            zip_code=notification.zip_code,
-            message=notification.message,
-            created_by=current_user.id,
+        db_weather_alert = WeatherAlert(
+            zip_code=weather_alert.zip_code,
+            message=weather_alert.message,
+            created_by=current_user.user_id,
             created_at=datetime.now(),
-            expires_at=notification.expires_at,
+            expires_at=weather_alert.expires_at,
             cancelled_at=None,
             is_active=True,
         )
-        session.add(db_notification)
+        session.add(db_weather_alert)
         await session.commit()
-        await session.refresh(db_notification)
+        await session.refresh(db_weather_alert)
 
         # Publish to Redis using app manager
-        await request.app.state.app_manager.notification_service.publish_notification(
-            db_notification
+        await request.app.state.app_manager.weather_alert_service.publish_weather_alert(
+            db_weather_alert
         )
 
-        return WeatherNotificationResponse.from_db(db_notification)
+        return WeatherAlertResponse.from_db(db_weather_alert)
 
 
-@admin_router.delete("/notifications/{notification_id}")
-async def cancel_notification(
+@admin_router.delete("/weather-alerts/{weather_alert_id}")
+async def cancel_weather_alert(
     request: Request,
-    notification_id: UUID,
+    weather_alert_id: UUID,
     current_user: User = Depends(get_current_user),
 ) -> None:
     if current_user.account_type not in [AccountType.ADMIN, AccountType.SUPERADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admin users can cancel notifications",
+            detail="Only admin users can cancel weather alerts",
         )
 
     async with session_maker() as session:
-        notification = await session.get(WeatherNotification, notification_id)
-        if not notification:
+        weather_alert = await session.get(WeatherAlert, weather_alert_id)
+        if not weather_alert:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Notification not found",
+                detail="Weather alert not found",
             )
-        notification.cancelled_at = datetime.now()
-        notification.is_active = False
+        weather_alert.cancelled_at = datetime.now()
+        weather_alert.is_active = False
         await session.commit()
 
         # Cancel in Redis using app manager
-        await request.app.state.app_manager.notification_service.cancel_notification(
-            notification_id, notification.zip_code
+        await request.app.state.app_manager.weather_alert_service.cancel_weather_alert(
+            weather_alert_id, weather_alert.zip_code
         )
 
 
-@admin_router.get("/notifications", response_model=list[WeatherNotificationResponse])
-async def list_notifications(
+@admin_router.get("/weather-alerts", response_model=list[WeatherAlertResponse])
+async def list_weather_alerts(
     zip_code: Optional[str] = Query(None, description="Filter by ZIP code"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     current_user: User = Depends(get_current_user),
-) -> list[WeatherNotificationResponse]:
+) -> list[WeatherAlertResponse]:
     if current_user.account_type not in [AccountType.ADMIN, AccountType.SUPERADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admin users can list notifications",
+            detail="Only admin users can list weather alerts",
         )
 
     async with session_maker() as session:
-        query = select(WeatherNotification)
+        query = select(WeatherAlert)
 
         # Apply filters if provided
         if zip_code is not None:
             query = query.filter(
-                cast(ColumnElement[bool], WeatherNotification.zip_code == zip_code)
+                cast(ColumnElement[bool], WeatherAlert.zip_code == zip_code)
             )
         if is_active is not None:
             query = query.filter(
-                cast(ColumnElement[bool], WeatherNotification.is_active == is_active)
+                cast(ColumnElement[bool], WeatherAlert.is_active == is_active)
             )
 
         result = await session.execute(query)
-        notifications = result.scalars().all()
+        weather_alerts = result.scalars().all()
 
-        return [WeatherNotificationResponse.from_db(n) for n in notifications]
+        return [WeatherAlertResponse.from_db(n) for n in weather_alerts]

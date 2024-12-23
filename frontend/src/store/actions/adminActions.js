@@ -1,43 +1,43 @@
 import * as actionTypes from '../ActionTypes';
 
-export const addNotificationRequest = () => ({
-    type: actionTypes.ADD_NOTIFICATION_REQUEST
+export const addWeatherAlertRequest = () => ({
+    type: actionTypes.ADD_WEATHER_ALERT_REQUEST
 });
 
-export const addNotificationSuccess = (notification) => ({
-    type: actionTypes.ADD_NOTIFICATION_SUCCESS,
+export const addWeatherAlertSuccess = (notification) => ({
+    type: actionTypes.ADD_WEATHER_ALERT_SUCCESS,
     payload: notification
 });
 
-export const addNotificationFailure = (error) => ({
-    type: actionTypes.ADD_NOTIFICATION_FAILURE,
+export const addWeatherAlertFailure = (error) => ({
+    type: actionTypes.ADD_WEATHER_ALERT_FAILURE,
     payload: error
 });
 
-export const cancelNotificationRequest = () => ({
-    type: actionTypes.CANCEL_NOTIFICATION_REQUEST
+export const cancelWeatherAlertRequest = () => ({
+    type: actionTypes.CANCEL_WEATHER_ALERT_REQUEST
 });
 
-export const cancelNotificationSuccess = (notificationId) => ({
-    type: actionTypes.CANCEL_NOTIFICATION_SUCCESS,
+export const cancelWeatherAlertSuccess = (notificationId) => ({
+    type: actionTypes.CANCEL_WEATHER_ALERT_SUCCESS,
     payload: notificationId
 });
 
-export const cancelNotificationFailure = (error) => ({
-    type: actionTypes.CANCEL_NOTIFICATION_FAILURE,
+export const cancelWeatherAlertFailure = (error) => ({
+    type: actionTypes.CANCEL_WEATHER_ALERT_FAILURE,
     payload: error
 });
 
-export const fetchNotificationsRequest = () => ({
-    type: actionTypes.FETCH_NOTIFICATIONS_REQUEST
+export const fetchWeatherAlertsRequest = () => ({
+    type: actionTypes.FETCH_WEATHER_ALERT_REQUEST
 });
 
-export const fetchNotificationsSuccess = (notifications) => ({
-    type: actionTypes.FETCH_NOTIFICATIONS_SUCCESS,
+export const fetchWeatherAlertsSuccess = (notifications) => ({
+    type: actionTypes.FETCH_WEATHER_ALERT_SUCCESS,
     payload: notifications
 });
 
-export const fetchNotificationsFailure = (error) => ({
-    type: actionTypes.FETCH_NOTIFICATIONS_FAILURE,
+export const fetchWeatherAlertsFailure = (error) => ({
+    type: actionTypes.FETCH_WEATHER_ALERT_FAILURE,
     payload: error
 });

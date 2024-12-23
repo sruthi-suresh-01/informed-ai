@@ -5,6 +5,18 @@ postgresql:
     password: password
     database: postgres
     postgresPassword: password
+  primary:
+    extraEnvVars:
+      - name: POSTGRESQL_USERNAME
+        value: postgres
+      - name: POSTGRESQL_PASSWORD
+        value: password
+      - name: POSTGRESQL_DATABASE
+        value: postgres
+      - name: POSTGRES_INITSCRIPTS_USERNAME
+        value: postgres
+      - name: POSTGRES_INITSCRIPTS_PASSWORD
+        value: password
 
 global:
   postgresql:
@@ -18,14 +30,15 @@ global:
 
 core:
   image:
-    name: gcr.io/informed-436823/informed-core
+    name: gcr.io/informed-ai-prod/informed-core
   extraEnvs:
     - name: DATABASE_CONFIG__DRIVER
       value: "psycopg"
 ui:
   image:
-    name: gcr.io/informed-436823/informed-ui
+    name: gcr.io/informed-ai-prod/informed-ui
     tag: latest
+
 
 hostname: "informed-ai.org"
 
@@ -36,7 +49,7 @@ ingress:
     kubernetes.io/ingress.class: gce
     kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.global-static-ip-name: "informed-app-static-ip"
-    kubernetes.io/ingress.backend-protocol: HTTPS
+    kubernetes.io/ingress.backend-protocol: HTTP
     networking.gke.io/managed-certificates: informed-cert
 
 certmanager:
@@ -54,7 +67,7 @@ opentelemetry:
   config:
     exporters:
       googlecloud:
-        project: informed-436823
+        project: informed-ai-prod
     service:
       pipelines:
         traces:

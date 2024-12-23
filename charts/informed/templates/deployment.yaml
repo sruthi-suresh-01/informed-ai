@@ -55,6 +55,8 @@ spec:
           image: "{{ .Values.core.image.name }}:{{ .Values.core.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: GOOGLE_API_KEY
+              value: {{ .Values.google.apiKey }}
             - name: LLM_CONFIG__OPENAI_CONFIG__API_KEY
               value: {{ .Values.llm.openai.apiKey }}
             - name: LLM_CONFIG__LLM_MODEL

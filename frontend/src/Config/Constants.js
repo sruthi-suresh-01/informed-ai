@@ -1,7 +1,7 @@
 export const Constants = {
     "apis" : {
-        "submit" : "api/v1/query/",
-        "generateResponse" : "api/v1/query/latest",
+        "addUserMessage" : "api/v1/chat",
+        "getChatThread" : "api/v1/chat",
         "register" : "api/v1/user/register",
         "login" : "api/v1/user/login",
         "logout" : "api/v1/user/logout",
@@ -10,6 +10,6 @@ export const Constants = {
         "setUserDetails": "api/v1/user/details",
         "getUserMedicalDetails": "api/v1/user/medical-details",
         "setUserMedicalDetails": "api/v1/user/medical-details",
-        "notifications": "/api/v1/admin/notifications"
+        "weatherAlerts": "/api/v1/admin/weather-alerts"
     }
 }

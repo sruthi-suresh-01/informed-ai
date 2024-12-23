@@ -29,13 +29,11 @@
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
-    border-top: 1px solid  #cccccc;
 }
 
 .formContainer {
     display: flex;
     width: 90%;
-    margin-right: 5px;
 }
 .questionContainer.focus {
     outline: 2px solid #4D90FE;
@@ -74,6 +72,7 @@ svg {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-left: 12px;
 }
 
 .loaderContainer {
@@ -86,4 +85,34 @@ svg {
     position: absolute;
     float: right;
     right: 30px;
+}
+
+.responseTypeSelectorContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modeToggleContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modeToggle {
+    margin-right: 10px;
+    color: #9BBDD8;
+    padding: 12px;
+}
+
+.modeToggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menuIcon {
+    color: #9BBDD8;
+}
+
+.selectedMenuItem {
+    background-color: rgba(155, 189, 216, 0.1) !important;
 }

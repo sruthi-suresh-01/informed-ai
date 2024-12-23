@@ -90,17 +90,15 @@ const AuthComponent = () => {
             }
           }}
         >
-          {isLoggedIn ? (
-            <>
-              <MenuItem disabled>
+          {isLoggedIn ? [
+              <MenuItem key="name" disabled>
                 {user?.details?.first_name} {user?.details?.last_name}
-              </MenuItem>
-              {isAdmin && (
-                <MenuItem onClick={handleAdminClick}>Admin Panel</MenuItem>
-              )}
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </>
-          ) : (
+              </MenuItem>,
+              isAdmin && (
+                <MenuItem key="admin" onClick={handleAdminClick}>Admin Panel</MenuItem>
+              ),
+              <MenuItem key="logout" onClick={handleLogout}>Logout</MenuItem>
+          ].filter(Boolean) : (
             <MenuItem onClick={handleOpenDialog}>Login</MenuItem>
           )}
         </Menu>

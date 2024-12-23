@@ -12,7 +12,8 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from informed.api.chat_query import chat_query_router
+# from informed.api.chat_query import chat_query_router
+from informed.api.chat import router as chat_router
 from informed.api.user import user_router
 from informed.api.weather import weather_router
 from informed.api.health import router as health_router
@@ -78,7 +79,8 @@ def create_app(config: Config) -> FastAPI:
 
     api_v1_router = APIRouter()
     api_v1_router.include_router(user_router, prefix="/user", tags=["users"])
-    api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
+    api_v1_router.include_router(chat_router, prefix="/chat", tags=["chat"])
+    # api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
     api_v1_router.include_router(weather_router, prefix="/weather", tags=["weather"])
     api_v1_router.include_router(health_router, prefix="/health", tags=["health"])
     api_v1_router.include_router(admin_router, prefix="/admin", tags=["admin"])

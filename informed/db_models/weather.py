@@ -5,6 +5,7 @@ from sqlalchemy import Column, DateTime, String, Text
 from sqlmodel import Field, SQLModel
 
 
+# TODO: I think this file can be removed. Keep it for now
 class WeatherData(SQLModel, table=True):
     __tablename__ = "weather_data"  #  type: ignore
 

@@ -48,7 +48,7 @@ check: ## 🚨 Run code quality tools.
 
 # Docker Image Building and Pushing
 .PHONY: build-ui build-core build-pgvector push-images
-GCP_PROJECT_ID := informed-436823
+GCP_PROJECT_ID := informed-ai-prod
 
 build-ui:
 	@echo "📦 Building informed-ui for AMD64"

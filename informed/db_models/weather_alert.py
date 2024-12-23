@@ -6,10 +6,10 @@ from sqlalchemy.types import Uuid as SQLAlchemyUuid
 from sqlmodel import Field, SQLModel
 
 
-class WeatherNotification(SQLModel, table=True):
-    __tablename__ = "weather_notifications"  #  type: ignore
+class WeatherAlert(SQLModel, table=True):
+    __tablename__ = "weather_alerts"  #  type: ignore
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    weather_alert_id: UUID = Field(default_factory=uuid4, primary_key=True)
     zip_code: str = Field(sa_column=Column(String(20), nullable=False, index=True))
     message: str = Field(sa_column=Column(Text, nullable=False))
     is_active: bool = Field(sa_column=Column(Boolean, nullable=False, default=True))
