@@ -11,7 +11,7 @@ from informed.db_models.users import User, AccountType
 from informed.helper.utils import get_current_user
 
 
-admin_router = APIRouter()
+router = APIRouter()
 
 
 class WeatherAlertCreate(BaseModel):
@@ -21,7 +21,7 @@ class WeatherAlertCreate(BaseModel):
 
 
 class WeatherAlertResponse(BaseModel):
-    id: UUID
+    weather_alert_id: UUID
     zip_code: str
     message: str
     created_by: UUID
@@ -33,7 +33,7 @@ class WeatherAlertResponse(BaseModel):
     @classmethod
     def from_db(cls, weather_alert: WeatherAlert) -> "WeatherAlertResponse":
         weather_alert_dict = {
-            "id": weather_alert.weather_alert_id,
+            "weather_alert_id": weather_alert.weather_alert_id,
             "zip_code": weather_alert.zip_code,
             "message": weather_alert.message,
             "created_by": weather_alert.created_by,
@@ -45,7 +45,7 @@ class WeatherAlertResponse(BaseModel):
         return cls.model_validate(weather_alert_dict)
 
 
-@admin_router.post("/weather-alerts", response_model=WeatherAlertResponse)
+@router.post("/weather-alerts", response_model=WeatherAlertResponse)
 async def create_weather_alert(
     request: Request,
     weather_alert: WeatherAlertCreate,
@@ -79,7 +79,7 @@ async def create_weather_alert(
         return WeatherAlertResponse.from_db(db_weather_alert)
 
 
-@admin_router.delete("/weather-alerts/{weather_alert_id}")
+@router.delete("/weather-alerts/{weather_alert_id}")
 async def cancel_weather_alert(
     request: Request,
     weather_alert_id: UUID,
@@ -108,7 +108,7 @@ async def cancel_weather_alert(
         )
 
 
-@admin_router.get("/weather-alerts", response_model=list[WeatherAlertResponse])
+@router.get("/weather-alerts", response_model=list[WeatherAlertResponse])
 async def list_weather_alerts(
     zip_code: Optional[str] = Query(None, description="Filter by ZIP code"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),

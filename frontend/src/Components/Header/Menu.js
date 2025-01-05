@@ -10,14 +10,16 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 import HealthUpdate from '../../Containers/HealthUpdate/HealthUpdate';
 import UserUpdate from '../../Containers/UserUpdate/UserUpdate';
 import DialogWrapper from '../DialogWrapper/DialogWrapper';
-import { useNotification } from '../../Containers/HOCLayout/NotificationContext';
+import { useToastMessage } from '../../Containers/HOCLayout/ToastMessageContext';
 import styles from './Header.module.css';
 
 import * as userActions from '../../store/actionCreators/userActionCreators'
+import UserSettings from '../../Containers/UserSettings/UserSettings';
 
 
 const menuItems = [
@@ -38,8 +40,16 @@ const menuItems = [
             success_msg: "User details updated successfully!",
         }
     },
+    {
+        code: 'settings',
+        label: 'Settings',
+        dialogProps: {
+            title: "User Settings",
+            success_msg: "Settings updated successfully!",
+        }
+    }
 ]
-const initialDialogFormState = {"profile": {}, "health_details": {}}
+const initialDialogFormState = {"profile": {}, "health_details": {}, "settings": {}}
 export function Menu(props) {
     const dispatch = useDispatch();
     const user = useSelector(state => state.user.user)
@@ -47,7 +57,7 @@ export function Menu(props) {
     const [dialogFormState, setDialogFormState] = useState(initialDialogFormState);
     const [isDialogOpen, openDialog] = useState(false);
     const [selectedMenuItem, selectMenuItem] = useState('');
-    const showNotification = useNotification()
+    const showToastMessage = useToastMessage()
     const toggleDrawer = (newOpen) => () => {
         setOpen(newOpen);
     };
@@ -77,6 +87,8 @@ export function Menu(props) {
             newDialogForm["profile"] = { ...updatedFormState }
         } else if(selectedMenuItem == "health_details") {
             newDialogForm["health_details"] = { ...updatedFormState }
+        } else if(selectedMenuItem == "settings") {
+            newDialogForm["settings"] = { ...updatedFormState }
         }
         setDialogFormState(newDialogForm)
     }
@@ -89,11 +101,13 @@ export function Menu(props) {
             case 'health_details':
                 dispatch(userActions.setUserMedicalDetails({ payload: dialogFormState[selectedMenuItem]}))
                 break
-
+            case 'settings':
+                dispatch(userActions.setUserSettings({ payload: dialogFormState[selectedMenuItem]}))
+                break;
         }
 
 
-        showNotification({ severity: 'success', message: menuItems.find((item) => item.code == selectedMenuItem)?.dialogProps?.success_msg });
+        showToastMessage({ severity: 'success', message: menuItems.find((item) => item.code == selectedMenuItem)?.dialogProps?.success_msg });
         handleDialogClose()
     }
 
@@ -106,7 +120,8 @@ export function Menu(props) {
                 selectMenuItem(item.code)
             }}>
                 <ListItemIcon>
-                {index % 2 === 0 ? <PersonIcon /> : <HealthAndSafetyIcon />}
+                {item.code === 'settings' ? <SettingsIcon /> :
+                 index % 2 === 0 ? <PersonIcon /> : <HealthAndSafetyIcon />}
                 </ListItemIcon>
                 <ListItemText primary={item.label} />
             </ListItemButton>
@@ -128,40 +143,40 @@ export function Menu(props) {
                 </svg>
             </div>
             <Drawer open={open} onClose={toggleDrawer(false)}>
-        {DrawerList}
-      </Drawer>
-        <DialogWrapper
-            open={isDialogOpen}
-            title={menuItems.find((item) => item.code == selectedMenuItem)?.dialogProps?.title || ''}
-            actions={[
+                {DrawerList}
+            </Drawer>
+            <DialogWrapper
+                open={isDialogOpen}
+                title={menuItems.find((item) => item.code == selectedMenuItem)?.dialogProps?.title || ''}
+                actions={[
+                    {
+                        type: "primary",
+                        text: "Cancel",
+                        invoke: () => {
+                            handleDialogClose()
+                        }
+                    },
+                    {
+                        type: "primary",
+                        text: "Save",
+                        invoke: handleOnSave
+                    },
+                ]}
+            >
                 {
-                    type: "primary",
-                    text: "Cancel",
-                    invoke: () => {
-                        handleDialogClose()
-                    }
-                },
+                    selectedMenuItem == 'profile' &&
+                    <UserUpdate onChange={handleDialogFormChange}/>
+                }
                 {
-                    type: "primary",
-                    text: "Save",
-                    invoke: handleOnSave
-                },
-            ]}
-        >
-            {
-                selectedMenuItem == 'profile' &&
-                <UserUpdate onChange={handleDialogFormChange}/>
-            }
-            {
-                selectedMenuItem == 'health_details' &&
-                <HealthUpdate onChange={handleDialogFormChange}/>
-            }
-            {
-                selectedMenuItem == 'dependants' &&
-                <UserUpdate onChange={handleDialogFormChange}/>
-            }
+                    selectedMenuItem == 'health_details' &&
+                    <HealthUpdate onChange={handleDialogFormChange}/>
+                }
+                {
+                    selectedMenuItem == 'settings' &&
+                    <UserSettings onChange={handleDialogFormChange}/>
+                }
 
-        </DialogWrapper>
+            </DialogWrapper>
 
         </div>
     );

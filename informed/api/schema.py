@@ -1,17 +1,20 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 
 from informed.db_models.users import (
     Language,
+    UserConfigurations,
     UserDetails,
     UserHealthConditions,
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
     User,
+    Settings,
 )
+from informed.db_models.notification import Notification, NotificationStatus
 
 from informed.db_models.query import QueryState, Query, QuerySource
 from informed.db_models.chat import (
@@ -20,6 +23,65 @@ from informed.db_models.chat import (
     MessageResponseType,
     ChatThread,
 )
+
+
+class SettingsRequest(BaseModel):
+    daily_updates: bool
+    daily_update_prompt: str
+
+    def to_user_configurations(self) -> UserConfigurations:
+        try:
+            user_configurations = UserConfigurations(**self.model_dump())
+            return user_configurations
+        except Exception as e:
+            raise ValueError(f"Invalid settings request: {e!s}")
+
+
+class SettingsResponse(BaseModel):
+    daily_updates: bool
+    daily_update_prompt: str
+
+    @classmethod
+    def from_user_settings(cls, settings: Settings) -> "SettingsResponse":
+        return cls.model_validate(settings.configurations, from_attributes=True)
+
+
+class NotificationResponse(BaseModel):
+    notification_id: UUID
+    user_id: UUID
+    created_at: datetime
+    updated_at: datetime
+    status: NotificationStatus
+    title: str
+    content: str
+    chat_thread_id: UUID
+
+    @classmethod
+    def from_db_notification(cls, notification: Notification) -> "NotificationResponse":
+        return cls.model_validate(notification, from_attributes=True)
+
+
+class NotificationListResponse(BaseModel):
+    notifications: list[NotificationResponse]
+
+    @classmethod
+    def from_user_notifications(
+        cls, notifications: list[Notification]
+    ) -> "NotificationListResponse":
+        return cls.model_validate(
+            {
+                "notifications": [
+                    NotificationResponse.from_db_notification(notification)
+                    for notification in notifications
+                ]
+            },
+            from_attributes=True,
+        )
+
+
+class BulkUpdateNotificationStatusRequest(BaseModel):
+    notification_ids: list[UUID]
+    status: NotificationStatus
 
 
 class CreateUserRequest(BaseModel):
@@ -128,22 +190,6 @@ class UserMedicalDetailsRequest(BaseModel):
     health_conditions: list[HealthCondition] = []
     weather_sensitivities: list[WeatherSensitivity] = []
     medications: list[Medication] = []
-
-
-class WeatherDataCreate(BaseModel):
-    zip_code: str
-    weather_conditions: str
-
-
-class WeatherDataResponse(BaseModel):
-    id: int
-    zip_code: str
-    date: date
-    timestamp: datetime
-    weather_conditions: str
-
-    class Config:
-        from_attributes = True
 
 
 class MedicationsResponse(BaseModel):

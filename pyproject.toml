@@ -31,6 +31,8 @@ schedule = "^1.2.2"
 tenacity = "^9.0.0"
 slowapi = "^0.1.9"
 google-cloud-texttospeech = "^2.23.0"
+langsmith = "^0.2.6"
+apscheduler = "^3.11.0"
 
 [tool.poetry.group.dev.dependencies]
 deptry = "^0.20.0"
@@ -111,6 +113,7 @@ check_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = false
 show_error_codes = true
+ignore_missing_imports = true
 
 
 [tool.pyright]

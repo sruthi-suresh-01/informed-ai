@@ -26,6 +26,6 @@ export const chatAgentPollFailure = (error) => {
 }
 
 
-export const setCurrentChatThreadId = (chatThreadId) => {
-    return { type: actionTypes.SET_CURRENT_CHAT_THREAD_ID, chatThreadId };
+export const setCurrentChatThreadId = (chatThreadId, resetMessages = false) => {
+    return { type: actionTypes.SET_CURRENT_CHAT_THREAD_ID, chatThreadId, resetMessages };
 }

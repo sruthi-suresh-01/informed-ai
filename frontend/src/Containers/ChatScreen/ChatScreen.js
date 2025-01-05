@@ -26,17 +26,17 @@ export function ChatScreen() {
         const params = new URLSearchParams(location.search);
         const id = params.get('id');
         if (id) {
-            dispatch(chatActions.setCurrentChatThreadId(id));
+            dispatch(chatActions.setCurrentChatThreadId(id, true));
         } else {
             dispatch(chatActions.setCurrentChatThreadId(null));
         }
-    }, []);
+    }, [location.search]);
 
     useEffect(() => {
         if (currentChatThreadId) {
-            navigate(`?id=${currentChatThreadId}`, { replace: true });
-        } else {
-            navigate('', { replace: true });
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('id', currentChatThreadId);
+            window.history.replaceState({}, '', newUrl);
         }
     }, [currentChatThreadId]);
 

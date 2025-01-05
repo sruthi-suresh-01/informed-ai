@@ -1,0 +1,32 @@
+.notificationComponent {
+  display: flex;
+  align-items: center;
+}
+
+.notificationTitle {
+  font-weight: bold;
+  display: inline;
+}
+
+.notificationContent {
+  font-size: 0.8rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+
+.notificationTime {
+  font-size: 0.7rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+.unreadNotification {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.readNotification {
+  opacity: 0.7;
+}

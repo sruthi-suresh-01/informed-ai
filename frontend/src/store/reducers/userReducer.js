@@ -6,7 +6,9 @@ const initialState = {
   user_medical_details: {},
   error: null,
   isLoading: false,
-  loggedIn: false
+  loggedIn: false,
+  notifications: [],
+  user_settings: {}
 };
 
 
@@ -64,6 +66,22 @@ function userReducer(state = initialState, action) {
           return { ...state, isLoading: false, user_medical_details: action.payload, error: null };
         case actionTypes.SET_USER_MEDICAL_DETAILS_FAILURE:
           return { ...state, isLoading: false, user_medical_details: {}, error: action.payload };
+
+        //
+        case actionTypes.GET_USER_SETTINGS_REQUEST:
+          return { ...state, isLoading: true, user_settings: {}, error: null };
+        case actionTypes.GET_USER_SETTINGS_SUCCESS:
+          return { ...state, isLoading: false, user_settings: action.payload, error: null };
+        case actionTypes.GET_USER_SETTINGS_FAILURE:
+          return { ...state, isLoading: false, user_settings: {}, error: action.payload };
+
+        //
+        case actionTypes.FETCH_NOTIFICATIONS_REQUEST:
+          return { ...state, isLoading: true, error: null };
+        case actionTypes.FETCH_NOTIFICATIONS_SUCCESS:
+          return { ...state, isLoading: false, notifications: action.payload, error: null };
+        case actionTypes.FETCH_NOTIFICATIONS_FAILURE:
+          return { ...state, isLoading: false, error: action.payload };
         default:
           return state;
     }

@@ -96,3 +96,51 @@ export const setUserMedicalDetailsSuccess = (user) => {
 export const setUserMedicalDetailsFailure = (error) => {
     return { type: actionTypes.SET_USER_MEDICAL_DETAILS_FAILURE, payload: error };
 }
+
+export const getUserSettingsRequest = () => {
+    return { type: actionTypes.GET_USER_SETTINGS_REQUEST };
+}
+
+export const getUserSettingsSuccess = (settings) => {
+    return { type: actionTypes.GET_USER_SETTINGS_SUCCESS, payload: settings };
+}
+
+export const getUserSettingsFailure = (error) => {
+    return { type: actionTypes.GET_USER_SETTINGS_FAILURE, payload: error };
+}
+
+export const setUserSettingsRequest = () => {
+    return { type: actionTypes.SET_USER_SETTINGS_REQUEST };
+}
+
+export const setUserSettingsSuccess = (settings) => {
+    return { type: actionTypes.SET_USER_SETTINGS_SUCCESS, payload: settings };
+}
+
+export const setUserSettingsFailure = (error) => {
+    return { type: actionTypes.SET_USER_SETTINGS_FAILURE, payload: error };
+}
+
+export const fetchNotificationsRequest = () => {
+    return { type: actionTypes.FETCH_NOTIFICATIONS_REQUEST };
+}
+
+export const fetchNotificationsSuccess = (notifications) => {
+    return { type: actionTypes.FETCH_NOTIFICATIONS_SUCCESS, payload: notifications };
+}
+
+export const fetchNotificationsFailure = (error) => {
+    return { type: actionTypes.FETCH_NOTIFICATIONS_FAILURE, payload: error };
+}
+
+export const updateNotificationStatusRequest = () => {
+    return { type: actionTypes.UPDATE_NOTIFICATION_STATUS_REQUEST };
+}
+
+export const updateNotificationStatusSuccess = (notifications) => {
+    return { type: actionTypes.UPDATE_NOTIFICATION_STATUS_SUCCESS, payload: notifications };
+}
+
+export const updateNotificationStatusFailure = (error) => {
+    return { type: actionTypes.UPDATE_NOTIFICATION_STATUS_FAILURE, payload: error };
+}

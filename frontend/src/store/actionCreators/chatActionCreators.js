@@ -55,6 +55,6 @@ export const getChatThread = (chatThreadId) => dispatch => {
 }
 
 
-export const setCurrentChatThreadId = (chatThreadId=null) => dispatch => {
-    dispatch(chatActions.setCurrentChatThreadId(chatThreadId));
+export const setCurrentChatThreadId = (chatThreadId=null, resetMessages = false) => dispatch => {
+    dispatch(chatActions.setCurrentChatThreadId(chatThreadId, resetMessages));
 }

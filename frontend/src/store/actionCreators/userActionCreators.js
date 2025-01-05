@@ -148,3 +148,47 @@ export const setUserMedicalDetails = ({ payload }) => dispatch => {
         dispatch(userActions.setUserMedicalDetailsFailure(error.message));
     });
 }
+
+export const getUserSettings = () => dispatch => {
+    dispatch(userActions.getUserSettingsRequest());
+
+    apiClient.get(api_urls.getUserSettings)
+        .then(response => {
+            dispatch(userActions.getUserSettingsSuccess(response.data));
+        })
+        .catch(error => dispatch(userActions.getUserSettingsFailure(error.message)));
+}
+
+export const setUserSettings = ({ payload }) => dispatch => {
+    dispatch(userActions.setUserSettingsRequest());
+
+    apiClient.post(api_urls.setUserSettings, payload)
+    .then(response => {
+        dispatch(userActions.setUserSettingsSuccess(response.data));
+    })
+    .catch(error => dispatch(userActions.setUserSettingsFailure(error.message)));
+}
+
+export const fetchNotifications = () => dispatch => {
+    dispatch(userActions.fetchNotificationsRequest());
+
+    apiClient.get(api_urls.fetchNotifications)
+        .then(response => {
+            if(response.data && response.data.notifications) {
+                dispatch(userActions.fetchNotificationsSuccess(response.data.notifications));
+            }
+        })
+        .catch(error => dispatch(userActions.fetchNotificationsFailure(error.message)));
+}
+
+export const updateNotificationStatus = ({ notification_ids, status }) => dispatch => {
+    dispatch(userActions.updateNotificationStatusRequest());
+
+    apiClient.put(api_urls.updateNotificationStatus, { notification_ids, status })
+    .then(response => {
+        if(response.data && response.data.notifications) {
+            dispatch(userActions.updateNotificationStatusSuccess(response.data.notifications));
+        }
+    })
+    .catch(error => dispatch(userActions.updateNotificationStatusFailure(error.message)));
+}

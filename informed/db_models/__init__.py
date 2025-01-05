@@ -8,9 +8,13 @@ from .users import (
     User,
     UserDetails,
     UserMedicalDetails,
+    UserMedications,
+    UserHealthConditions,
+    WeatherSensitivities,
+    Settings,
+    UserConfigurations,
 )
 from .weather_alert import WeatherAlert
-from .weather import WeatherData
 
 from .query import Query, QueryState, QuerySource
 
@@ -22,6 +26,8 @@ from .chat import (
     UserMessage,
     AssistantMessage,
 )
+
+from .notification import Notification, NotificationStatus
 
 __all__ = [
     # Base and utility classes
@@ -36,7 +42,6 @@ __all__ = [
     "Language",
     "UserMedicalDetails",
     # Weather-related models
-    "WeatherData",
     # Query-related models
     "Query",
     "QueryState",
@@ -50,4 +55,10 @@ __all__ = [
     "AssistantMessage",
     "MessageSource",
     "MessageResponseType",
+    # User Settings
+    "Settings",
+    "UserConfigurations",
+    # Notification related models
+    "Notification",
+    "NotificationStatus",
 ]

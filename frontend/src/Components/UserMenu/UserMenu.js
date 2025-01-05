@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from './LoginModal.module.css';
+import styles from './UserMenu.module.css';
 import { useDispatch, useSelector } from 'react-redux';
 import * as userActions from '../../store/actionCreators/userActionCreators';
 import LoginDialog from './LoginDialog';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconButton, Menu, MenuItem, Avatar } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
-const AuthComponent = () => {
+const UserMenu = () => {
   const dispatch = useDispatch();
   const user = useSelector(state => state.user.user);
   const isLoggedIn = useSelector(state => state.user.loggedIn);
@@ -114,4 +114,4 @@ const AuthComponent = () => {
   );
 };
 
-export default AuthComponent;
+export default UserMenu;

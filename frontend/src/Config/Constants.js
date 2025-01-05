@@ -10,6 +10,10 @@ export const Constants = {
         "setUserDetails": "api/v1/user/details",
         "getUserMedicalDetails": "api/v1/user/medical-details",
         "setUserMedicalDetails": "api/v1/user/medical-details",
-        "weatherAlerts": "/api/v1/admin/weather-alerts"
+        "weatherAlerts": "/api/v1/admin/weather-alerts",
+        "fetchNotifications": "/api/v1/notifications/",
+        "updateNotificationStatus": "/api/v1/notifications/",
+        "getUserSettings": "/api/v1/user/settings",
+        "setUserSettings": "/api/v1/user/settings"
     }
 }

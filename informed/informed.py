@@ -6,6 +6,8 @@ from informed.agents.query_agent.query_agent import QueryAgent
 from uuid import UUID
 from loguru import logger as log
 import asyncio
+from typing import Callable, Awaitable
+
 from contextvars import ContextVar
 from informed.llm.client import LLMClient
 from informed.db import session_maker
@@ -19,7 +21,9 @@ from redis.asyncio import Redis
 from informed.chat.manager import DBChatManager
 from informed.agents.chat_agent.chat_agent import ChatAgent
 from informed.api.schema import ChatRequest, AddUserMessageRequest
-from informed.db_models.chat import ChatThread, Message
+from informed.db_models.chat import ChatThread, Message, AssistantMessage
+from informed.services.notifications.manager import NotificationsManager
+from informed.db_models.notification import Notification, NotificationStatus
 
 
 class InformedManager:
@@ -30,6 +34,7 @@ class InformedManager:
         self.weather_alert_service = WeatherAlertService(config, redis_client)
         self.query_manager = QueryManager()
         self.chat_manager = DBChatManager()
+        self.notifications_manager = NotificationsManager()
         self._lock_var: ContextVar[asyncio.Lock] = ContextVar("lock_var")
         self._query_tasks: dict[UUID, asyncio.Task] = {}
         self._user_tasks: dict[UUID, asyncio.Task] = {}
@@ -42,111 +47,6 @@ class InformedManager:
             lock = asyncio.Lock()
             self._lock_var.set(lock)
         return lock
-
-    # async def cancel_all_tasks(self) -> None:
-    #     async with self._get_lock():
-    #         for task in self._query_tasks.values():
-    #             task.cancel()
-    #         for task in self._user_tasks.values():
-    #             task.cancel()
-
-    # async def cancel_user_tasks(self, user_id: UUID) -> None:
-    #     async with self._get_lock():
-    #         task = self._user_tasks.get(user_id)
-    #         if task:
-    #             task.cancel()
-    #             del self._user_tasks[user_id]
-
-    # async def create_query(self, user_id: UUID, query: str) -> QueryResponse:
-    #     created_query = await self.query_manager.create_query(user_id, query)
-    #     log.info(f"Created query {created_query.query_id} for user {user_id}")
-    #     return created_query
-
-    # async def get_query(self, query_id: UUID) -> Query:
-    #     query = await self.query_manager.get_query(query_id)
-    #     if query is None:
-    #         raise ValueError(f"Query {query_id} not found")
-    #     log.info(f"Got query {query.query_id} for user {query.user_id}")
-    #     return query
-
-    # async def update_query(self, query: Query) -> QueryResponse:
-    #     request = UpdateQueryRequest(query_id=query.query_id, state=query.state)
-    #     updated_query = await self.query_manager.update_query(request)
-    #     log.info(f"Updated query {query.query_id} for user {query.user_id}")
-    #     return updated_query
-
-    # async def start_query(self, query_id: UUID) -> QueryResponse:
-    #     query = await self.query_manager.get_query(query_id)
-    #     if query is None:
-    #         raise ValueError(f"Query {query_id} not found")
-    #     if query.state not in [QueryState.PENDING, QueryState.CREATED]:
-    #         raise ValueError(f"Query {query_id} is not in pending state")
-
-    #     return await self._start_query(query)
-
-    # async def _start_query(self, query: Query) -> QueryResponse:
-    #     initial_query_state = query.state
-    #     query_id = query.query_id
-    #     timeout = 20  # TODO: Make this configurable
-
-    #     # Cancel all tasks for the user since we only process last query
-    #     await self.cancel_user_tasks(query.user_id)
-
-    #     async with self._get_lock():
-    #         task = asyncio.create_task(self._run_query_agent(query))
-    #         # self._query_tasks[query_id] = task
-    #         self._user_tasks[query.user_id] = task
-    #     try:
-    #         await asyncio.wait_for(
-    #             self._wait_for_query_start(query_id, initial_query_state), timeout
-    #         )
-    #     except TimeoutError:
-    #         task.cancel()
-    #         raise TimeoutError(
-    #             f"Query {query_id} did not start within {timeout} seconds"
-    #         ) from None
-
-    #     started_query = await self.query_manager.get_query(query_id)
-    #     if started_query is None:
-    #         raise ValueError(f"Query {query_id} not found after starting")
-    #     return QueryResponse.from_db(started_query)
-
-    # async def _run_query_agent(self, query: Query) -> asyncio.Task:
-    #     query_agent = QueryAgent(
-    #         query_id=query.query_id,
-    #         query_manager=self.query_manager,
-    #         user_manager=self.user_manager,
-    #         llm_client=self.llm_client,
-    #         weather_sources_config=self.config.weather_sources_config,
-    #         weather_alert_service=self.weather_alert_service,
-    #     )
-    #     query_task = asyncio.create_task(query_agent.run())
-    #     # self._query_tasks[query_id] = query_task
-    #     self._user_tasks[query.user_id] = query_task
-    #     return query_task
-
-    # async def _wait_for_query_start(
-    #     self, query_id: UUID, initial_state: QueryState
-    # ) -> None:
-    #     while True:
-    #         query = await self.query_manager.get_query(query_id)
-    #         if query is None:
-    #             raise ValueError(f"Query {query_id} not found")
-    #         if query.state != initial_state:
-    #             return
-    #         await asyncio.sleep(0.5)
-
-    # async def get_recent_query_for_user(self, user_id: UUID) -> QueryResponse | None:
-    #     query = await self.query_manager.get_recent_query_for_user(user_id)
-    #     if query is None:
-    #         return None
-    #     return QueryResponse.from_db(query)
-
-    # async def get_query(self, query_id: UUID) -> QueryResponse | None:
-    #     query = await self.query_manager.get_query(query_id)
-    #     if query is None:
-    #         return None
-    #     return QueryResponse.from_db(query)
 
     async def get_user(self, user_id: UUID) -> User:
         async with session_maker() as session:
@@ -168,10 +68,17 @@ class InformedManager:
                 del self._chat_agents[chat_thread_id]
 
     async def start_new_chat_thread(
-        self, chat_request: ChatRequest, user_id: UUID
+        self,
+        chat_request: ChatRequest,
+        user_id: UUID,
+        assistant_message_callback: (
+            Callable[[UUID, AssistantMessage, QueryState], Awaitable[None]] | None
+        ) = None,
     ) -> ChatThread:
         chat_thread = await self.chat_manager.create_chat_thread(chat_request, user_id)
-        await self.start_chat_agent(chat_thread.chat_thread_id)
+        await self.start_chat_agent(
+            chat_thread.chat_thread_id, assistant_message_callback
+        )
         return chat_thread
 
     async def add_user_message(
@@ -185,15 +92,26 @@ class InformedManager:
 
         return message_id
 
-    async def start_chat_agent(self, chat_thread_id: UUID) -> None:
+    async def start_chat_agent(
+        self,
+        chat_thread_id: UUID,
+        assistant_message_callback: (
+            Callable[[UUID, AssistantMessage, QueryState], Awaitable[None]] | None
+        ) = None,
+    ) -> None:
         chat_thread = await self.chat_manager.get_chat_thread(chat_thread_id)
         if chat_thread is None:
             raise Exception(f"Chat thread {chat_thread_id} not found")
-        await self._ensure_running_chat_agent(chat_thread_id)
+        await self._ensure_running_chat_agent(
+            chat_thread_id, assistant_message_callback
+        )
 
     async def _ensure_running_chat_agent(
         self,
         chat_thread_id: UUID,
+        assistant_message_callback: (
+            Callable[[UUID, AssistantMessage, QueryState], Awaitable[None]] | None
+        ) = None,
     ) -> None:
         chat_agent = self._chat_agents.get(chat_thread_id, None)
         if chat_agent and chat_agent.is_running():
@@ -212,6 +130,7 @@ class InformedManager:
             weather_sources_config=self.config.weather_sources_config,
             weather_alert_service=self.weather_alert_service,
             chat_termination_callback=termination_callback,
+            assistant_message_callback=assistant_message_callback,
         )
         self._chat_agents[chat_thread_id] = chat_agent
 
@@ -246,3 +165,57 @@ class InformedManager:
         if message is None:
             raise ValueError(f"Message {message_id} not found")
         return message
+
+    async def get_notifications_for_user(
+        self, user_id: UUID, limit: int = 10
+    ) -> list[Notification]:
+        return await self.notifications_manager.get_notifications_for_user(
+            user_id, limit
+        )
+
+    async def bulk_update_notification_status(
+        self, notification_ids: list[UUID], status: NotificationStatus
+    ) -> None:
+        return await self.notifications_manager.bulk_update_notification_status(
+            notification_ids, status
+        )
+
+    async def send_daily_updates(self) -> None:
+        """Send daily updates to all opted-in users."""
+
+        async def notification_callback(
+            chat_thread_id: UUID, message: AssistantMessage, query_state: QueryState
+        ) -> None:
+            await self.notifications_manager.update_notification_from_chat_thread(
+                chat_thread_id, message, query_state
+            )
+
+        try:
+            users = await self.notifications_manager.get_users_with_daily_updates()
+            log.info(f"Sending daily updates to {len(users)} users")
+
+            for user_id, prompt in users:
+                try:
+                    chat_request = ChatRequest(message=prompt)
+                    chat_thread = await self.start_new_chat_thread(
+                        chat_request=chat_request,
+                        user_id=user_id,
+                        assistant_message_callback=notification_callback,
+                    )
+
+                    await self.notifications_manager.create_notification(
+                        user_id=user_id,
+                        chat_thread_id=chat_thread.chat_thread_id,
+                        title="Daily Update",
+                        content="Processing your daily update...",
+                    )
+
+                    log.info(f"Created daily update chat thread for user {user_id}")
+                except Exception as e:
+                    log.error(
+                        f"Failed to send daily update to user {user_id}: {str(e)}"
+                    )
+                    continue
+
+        except Exception as e:
+            log.error(f"Failed to process daily updates: {str(e)}")

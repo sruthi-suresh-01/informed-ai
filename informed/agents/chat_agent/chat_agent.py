@@ -21,6 +21,7 @@ from informed.users.manager import UserManager
 from informed.agents.query_agent.query_runner import QueryRunner
 from informed.db_models.chat import MessageResponseType
 from informed.db_models.users import Language
+from informed.db_models.query import QueryState
 
 
 class ChatAgent:
@@ -34,6 +35,9 @@ class ChatAgent:
         weather_sources_config: WeatherSourcesConfig,
         weather_alert_service: WeatherAlertService,
         chat_termination_callback: Callable[[], Awaitable[None]],
+        assistant_message_callback: (
+            Callable[[UUID, AssistantMessage, QueryState], Awaitable[None]] | None
+        ) = None,
     ):
         self.chat_thread_id = chat_thread_id
 
@@ -44,7 +48,7 @@ class ChatAgent:
         self.weather_sources_config = weather_sources_config
         self.weather_alert_service = weather_alert_service
         self._chat_termination_callback = chat_termination_callback
-
+        self._assistant_message_callback = assistant_message_callback
         # only one query agent will be running at a time
         self._query_runner: QueryRunner = QueryRunner(
             query_monitor_timeout=120.0,
@@ -192,7 +196,7 @@ class ChatAgent:
             response_type=response_type,
             language=language,
         )
-        await self._add_assistant_response(final_response_msg)
+        await self._add_assistant_response(final_response_msg, query.state)
 
         pending_messages = await self._pending_messages()
         if not pending_messages:
@@ -217,11 +221,19 @@ class ChatAgent:
         msg.acknowledged = True
         await self.chat_manager.update_message(Message.model_validate(msg))
 
-    async def _add_assistant_response(self, msg: AssistantMessage) -> None:
+    async def _add_assistant_response(
+        self, msg: AssistantMessage, query_state: QueryState
+    ) -> None:
         # Always add the message to the chat thread, independent of whether we send a message in Slack
         await self.chat_manager.add_assistant_message(
             self.chat_thread_id, Message.model_validate(msg, from_attributes=True)
         )
+        if self._assistant_message_callback:
+            message = msg
+            chat_thread_id = self.chat_thread_id
+            query_state = query_state
+
+            await self._assistant_message_callback(chat_thread_id, message, query_state)
 
     def _generate_instructions_based_on_response_type(
         self, message: UserMessage

@@ -11,7 +11,10 @@ from informed.db_models import (  # noqa: F401
     User,
     UserDetails,
     UserMedicalDetails,
-    WeatherNotification,
+    WeatherAlert,
+    Settings,
+    Notification,
+    NotificationStatus,
 )
 
 if __name__ == "__main__":

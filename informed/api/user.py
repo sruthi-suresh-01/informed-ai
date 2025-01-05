@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import ColumnElement, delete, select
 from sqlalchemy.exc import IntegrityError
 
-from informed.helper.utils import get_current_user
+from informed.helper.utils import UserDep
 from informed.api.schema import (
     CreateUserRequest,
     LoginRequest,
@@ -16,6 +16,8 @@ from informed.api.schema import (
     UserMedicalDetailsRequest,
     UserMedicalDetailsResponse,
     AuthenticatedUserResponse,
+    SettingsRequest,
+    SettingsResponse,
 )
 from informed.db import session_maker
 from informed.db_models.users import (
@@ -26,9 +28,11 @@ from informed.db_models.users import (
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
+    Settings,
+    UserConfigurations,
 )
 
-user_router = APIRouter()
+router = APIRouter()
 
 
 async def set_session_cookie(request: Request, response: Response, user: User) -> None:
@@ -46,7 +50,7 @@ async def set_session_cookie(request: Request, response: Response, user: User) -
     )
 
 
-@user_router.post(
+@router.post(
     "/register",
     response_model=AuthenticatedUserResponse,
     status_code=status.HTTP_201_CREATED,
@@ -69,6 +73,11 @@ async def register_user(
             new_user.medical_details = UserMedicalDetails.create(
                 user_id=new_user.user_id
             )
+            new_user.settings = Settings(
+                user_id=new_user.user_id,
+                configurations=UserConfigurations(),
+            )
+
             session.add(new_user)
             try:
                 await session.commit()
@@ -92,7 +101,7 @@ async def register_user(
         )
 
 
-@user_router.post("/login", response_model=AuthenticatedUserResponse)
+@router.post("/login", response_model=AuthenticatedUserResponse)
 async def login(
     request: Request, login_request: LoginRequest, response: Response
 ) -> AuthenticatedUserResponse:
@@ -117,7 +126,7 @@ async def login(
         raise HTTPException(status_code=500, detail=f"An error occurred: {e!s}")
 
 
-@user_router.get("/logout")
+@router.get("/logout")
 async def logout(request: Request, response: Response) -> dict:
     session_token = request.cookies.get("session_token")
     redis_client = request.app.state.redis_client
@@ -127,9 +136,9 @@ async def logout(request: Request, response: Response) -> dict:
     raise HTTPException(status_code=400, detail="No active session found")
 
 
-@user_router.get("/me")
+@router.get("/me")
 async def check_session_alive(
-    current_user: User = Depends(get_current_user),
+    current_user: UserDep,
 ) -> AuthenticatedUserResponse:
     try:
         return AuthenticatedUserResponse.from_user(user=current_user)
@@ -137,10 +146,10 @@ async def check_session_alive(
         raise HTTPException(status_code=400, detail="No active session found")
 
 
-@user_router.post("/details")
+@router.post("/details")
 async def set_user_details(
     details: UserDetailsRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: UserDep,
 ) -> dict:
     async with session_maker() as session:
         # Check if the user exists
@@ -184,9 +193,9 @@ async def set_user_details(
     return {"message": "User details updated successfully"}
 
 
-@user_router.get("/details", response_model=UserDetailsResponse)
+@router.get("/details", response_model=UserDetailsResponse)
 async def get_user_details(
-    current_user: User = Depends(get_current_user),
+    current_user: UserDep,
 ) -> UserDetailsResponse:
 
     user = current_user
@@ -200,9 +209,9 @@ async def get_user_details(
     return UserDetailsResponse.from_user_details(user.details)
 
 
-@user_router.get("/medical-details", response_model=UserMedicalDetailsResponse)
+@router.get("/medical-details", response_model=UserMedicalDetailsResponse)
 async def get_medical_details(
-    current_user: User = Depends(get_current_user),
+    current_user: UserDep,
 ) -> UserMedicalDetailsResponse:
 
     user = current_user
@@ -212,10 +221,10 @@ async def get_medical_details(
     return UserMedicalDetailsResponse.from_user_medical_details(user.medical_details)
 
 
-@user_router.post("/medical-details")
+@router.post("/medical-details")
 async def set_medical_details(
     details: UserMedicalDetailsRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: UserDep,
 ) -> dict:
     user = current_user
     try:
@@ -267,6 +276,25 @@ async def set_medical_details(
             session.add(user)
             await session.commit()
             return {"message": "Medical details updated successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"An unexpected error occurred: {e!s}"
+        )
+
+
+@router.get("/settings")
+async def get_settings(user: UserDep) -> SettingsResponse:
+    return SettingsResponse.from_user_settings(user.settings)
+
+
+@router.post("/settings")
+async def set_settings(settings: SettingsRequest, user: UserDep) -> SettingsResponse:
+    try:
+        async with session_maker() as session:
+            user.settings.configurations = settings.to_user_configurations()
+            session.add(user)
+            await session.commit()
+            return SettingsResponse.from_user_settings(user.settings)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"An unexpected error occurred: {e!s}"

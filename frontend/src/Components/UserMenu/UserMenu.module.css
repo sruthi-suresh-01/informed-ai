@@ -128,14 +128,6 @@
     padding: 15px 10px;
   }
 
-  .userNameInputContainer {
-    /* width: 80%; */
-  }
-  .passwordInputContainer {
-    /* width: 80%; */
-  }
-
-
   .usernameSubmitContainer {
     padding: 15px 10px;
     display: flex;

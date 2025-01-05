@@ -7,6 +7,8 @@ from openai.types.chat.chat_completion_message_tool_call import Function
 from informed.config import LLMConfig
 from informed.llm.llm import ChatState
 
+from langsmith import traceable
+
 
 class LLMClient:
     def __init__(self, config: LLMConfig):
@@ -17,6 +19,7 @@ class LLMClient:
             api_key=config.openai_config.api_key,
         )
 
+    @traceable
     async def chat_completion(
         self, chat_state: ChatState, tools: list[Any], max_tokens: int | None = None
     ) -> Function:

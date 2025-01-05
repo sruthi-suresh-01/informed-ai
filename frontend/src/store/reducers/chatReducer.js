@@ -47,7 +47,8 @@ function chatReducer(state = initialState, action) {
             if(!action.chatThreadId) {
                 return { ...state, currentChatThreadId: null, waitingForResponse: false, messages: [] };
             }
-            return { ...state, currentChatThreadId: action.chatThreadId, waitingForResponse: true };
+            let messages = action.resetMessages ? [] : state.messages;
+            return { ...state, currentChatThreadId: action.chatThreadId, waitingForResponse: true, messages: messages };
         case actionTypes.LOGOUT_SUCCESS:
             return { ...state, messages: [] };
         default:

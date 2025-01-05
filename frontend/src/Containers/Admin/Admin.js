@@ -6,8 +6,8 @@ import * as adminActions from '../../store/actionCreators/adminActionCreators'
 
 export function Admin() {
     const dispatch = useDispatch();
-    const notifications = useSelector(state => state.admin.notifications);
-    const [newNotification, setNewNotification] = useState({
+    const weatherAlerts = useSelector(state => state.admin.weatherAlerts);
+    const [newWeatherAlert, setWeatherAlert] = useState({
         message: '',
         zipCodes: [],
         currentZip: '',
@@ -51,7 +51,7 @@ export function Admin() {
     const handleAddZipCode = (e) => {
         if (e.key === 'Enter' && e.target.value.trim()) {
             e.preventDefault();
-            setNewNotification(prev => ({
+            setWeatherAlert(prev => ({
                 ...prev,
                 zipCodes: [...prev.zipCodes, prev.currentZip.trim()],
                 currentZip: ''
@@ -60,21 +60,21 @@ export function Admin() {
     };
 
     const removeZipCode = (indexToRemove) => {
-        setNewNotification(prev => ({
+        setWeatherAlert(prev => ({
             ...prev,
             zipCodes: prev.zipCodes.filter((_, index) => index !== indexToRemove)
         }));
     };
 
-    const handleAddNotification = () => {
-        if (!newNotification.message.trim() || newNotification.zipCodes.length === 0) return;
+    const handleAddWeatherAlert = () => {
+        if (!newWeatherAlert.message.trim() || newWeatherAlert.zipCodes.length === 0) return;
 
         dispatch(adminActions.addWeatherAlert({
-            ...newNotification,
-            zipCode: newNotification.zipCodes[0] // For now, just use the first ZIP code
+            ...newWeatherAlert,
+            zipCode: newWeatherAlert.zipCodes[0] // For now, just use the first ZIP code
         }));
 
-        setNewNotification({
+        setWeatherAlert({
             message: '',
             zipCodes: [],
             currentZip: '',
@@ -86,17 +86,17 @@ export function Admin() {
         const now = new Date();
         const expiryDate = new Date(now.getTime() + selectedOption.hours * 60 * 60 * 1000);
 
-        setNewNotification({
-            ...newNotification,
+        setWeatherAlert({
+            ...newWeatherAlert,
             expiresAt: expiryDate
         });
     };
 
-    const handleCancelNotification = (notificationId) => {
-        dispatch(adminActions.cancelWeatherAlert(notificationId));
+    const handleCancelWeatherAlert = (weatherAlertId) => {
+        dispatch(adminActions.cancelWeatherAlert(weatherAlertId));
     };
 
-    const NotificationItem = ({ notification, onDelete }) => {
+    const WeatherAlertItem = ({ weatherAlert, onDelete }) => {
         const [isExpanded, setIsExpanded] = useState(false);
 
         const handleClick = (e) => {
@@ -115,40 +115,40 @@ export function Admin() {
             >
                 <div className={styles.notificationDetails}>
                     <span className={styles.notificationText}>
-                        {notification.message}
+                        {weatherAlert.message}
                     </span>
                     <span className={styles.notificationMeta}>
-                        ZIP: {notification.zip_code} | Expires: {formatDate(notification.expires_at)}
+                        ZIP: {weatherAlert.zip_code} | Expires: {formatDate(weatherAlert.expires_at)}
                     </span>
 
                     {isExpanded && (
                         <div className={styles.expandedContent}>
                             <span className={styles.expandedMessage}>
-                                {notification.message}
+                                {weatherAlert.message}
                             </span>
                             <div className={styles.metadataGrid}>
                                 <span className={styles.metadataLabel}>ID:</span>
-                                <span className={styles.metadataValue}>{notification.id}</span>
+                                <span className={styles.metadataValue}>{weatherAlert.id}</span>
 
                                 <span className={styles.metadataLabel}>Created At:</span>
-                                <span className={styles.metadataValue}>{formatDate(notification.created_at)}</span>
+                                <span className={styles.metadataValue}>{formatDate(weatherAlert.created_at)}</span>
 
                                 <span className={styles.metadataLabel}>Expires At:</span>
-                                <span className={styles.metadataValue}>{formatDate(notification.expires_at)}</span>
+                                <span className={styles.metadataValue}>{formatDate(weatherAlert.expires_at)}</span>
 
-                                {notification.cancelled_at && (
+                                {weatherAlert.cancelled_at && (
                                     <>
                                         <span className={styles.metadataLabel}>Cancelled At:</span>
-                                        <span className={styles.metadataValue}>{formatDate(notification.cancelled_at)}</span>
+                                        <span className={styles.metadataValue}>{formatDate(weatherAlert.cancelled_at)}</span>
                                     </>
                                 )}
                             </div>
                         </div>
                     )}
                 </div>
-                {notification.is_active && (
+                {weatherAlert.is_active && (
                     <button
-                        onClick={() => onDelete(notification.id)}
+                        onClick={() => onDelete(weatherAlert.id)}
                         className={styles.deleteButton}
                     >
                         Delete
@@ -170,7 +170,7 @@ export function Admin() {
                         })}
                         className={styles.filterSelect}
                     >
-                        <option value="all">All Notifications</option>
+                        <option value="all">All Alerts</option>
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
                     </select>
@@ -197,16 +197,16 @@ export function Admin() {
                             type="text"
                             placeholder="Message"
                             className={styles.notificationInput}
-                            value={newNotification.message}
-                            onChange={(e) => setNewNotification({
-                                ...newNotification,
+                            value={newWeatherAlert.message}
+                            onChange={(e) => setWeatherAlert({
+                                ...newWeatherAlert,
                                 message: e.target.value
                             })}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                         />
                         <div className={styles.zipCodeTags}>
-                            {newNotification.zipCodes.map((zip, index) => (
+                            {newWeatherAlert.zipCodes.map((zip, index) => (
                                 <span key={index} className={styles.zipTag}>
                                     {zip}
                                     <button
@@ -220,9 +220,9 @@ export function Admin() {
                             <input
                                 type="text"
                                 placeholder="Enter ZIP code and press Enter"
-                                value={newNotification.currentZip}
-                                onChange={(e) => setNewNotification({
-                                    ...newNotification,
+                                value={newWeatherAlert.currentZip}
+                                onChange={(e) => setWeatherAlert({
+                                    ...newWeatherAlert,
                                     currentZip: e.target.value
                                 })}
                                 onKeyPress={handleAddZipCode}
@@ -239,11 +239,11 @@ export function Admin() {
                     </div>
                     <div className={styles.addFormActions}>
                         <button
-                            onClick={handleAddNotification}
+                            onClick={handleAddWeatherAlert}
                             className={styles.addButton}
-                            disabled={!newNotification.message.trim() || newNotification.zipCodes.length === 0}
+                            disabled={!newWeatherAlert.message.trim() || newWeatherAlert.zipCodes.length === 0}
                         >
-                            Add Notification
+                            Add Alert
                         </button>
                         <button
                             onClick={() => setShowAddForm(false)}
@@ -256,11 +256,11 @@ export function Admin() {
             )}
 
             <div className={styles.notificationsList}>
-                {notifications.map(notification => (
-                    <NotificationItem
-                        key={notification.id}
-                        notification={notification}
-                        onDelete={handleCancelNotification}
+                {weatherAlerts.map(weatherAlert => (
+                    <WeatherAlertItem
+                        key={weatherAlert.weather_alert_id}
+                        weatherAlert={weatherAlert}
+                        onDelete={handleCancelWeatherAlert}
                     />
                 ))}
             </div>

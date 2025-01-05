@@ -12,14 +12,14 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-# from informed.api.chat_query import chat_query_router
 from informed.api.chat import router as chat_router
-from informed.api.user import user_router
-from informed.api.weather import weather_router
+from informed.api.user import router as user_router
 from informed.api.health import router as health_router
-from informed.api.admin import admin_router
+from informed.api.admin import router as admin_router
+from informed.api.notification import router as notification_router
 from informed.config import Config
 from informed.db import init_db
+from informed.scheduler import JobScheduler
 from informed.redis import init_redis_client
 from informed.helper.utils import get_concise_exception_traceback
 from informed.informed import InformedManager
@@ -31,10 +31,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
     try:
         # Startup logic
         log.info("Initializing resources...")
+        job_scheduler: JobScheduler = app.state.job_scheduler
+        job_scheduler.start()
         # Add any initialization code here
 
         yield
 
+        # Shutdown logic
+        job_scheduler.stop()
         await app.state.app_manager.cancel_all_tasks()
         if hasattr(app.state, "executor"):
             app.state.executor.shutdown(wait=True)
@@ -51,7 +55,6 @@ def create_app(config: Config) -> FastAPI:
     redis_client = init_redis_client(config.redis_config)
     # Initialize the job scheduler
     app = FastAPI(lifespan=lifespan)
-    # app.mount("/files", StaticFiles(directory="static"), name="static")
     app.state.config = config
     app.state.version = os.getenv("APP_VERSION")
 
@@ -67,6 +70,29 @@ def create_app(config: Config) -> FastAPI:
     app.state.app_manager = app_manager
 
     # Initialize the job scheduler
+    job_scheduler = JobScheduler()
+    app.state.job_scheduler = job_scheduler
+
+    # Schedule daily updates with unique IDs
+    job_scheduler.add_cron_job(
+        app_manager.send_daily_updates,
+        hour=18,
+        minute=4,
+        timezone="America/Los_Angeles",
+    )
+    # TODO: Same name will throw error in job scheduler
+    # job_scheduler.add_cron_job(
+    #     app_manager.send_daily_updates,
+    #     hour=7,
+    #     minute=0,
+    #     timezone="America/Los_Angeles",
+    # )
+    # job_scheduler.add_cron_job(
+    #     app_manager.send_daily_updates,
+    #     hour=16,
+    #     minute=30,
+    #     timezone="America/Los_Angeles",
+    # )
 
     # Add CORS middleware
     app.add_middleware(
@@ -80,10 +106,11 @@ def create_app(config: Config) -> FastAPI:
     api_v1_router = APIRouter()
     api_v1_router.include_router(user_router, prefix="/user", tags=["users"])
     api_v1_router.include_router(chat_router, prefix="/chat", tags=["chat"])
-    # api_v1_router.include_router(chat_query_router, prefix="/query", tags=["query"])
-    api_v1_router.include_router(weather_router, prefix="/weather", tags=["weather"])
     api_v1_router.include_router(health_router, prefix="/health", tags=["health"])
     api_v1_router.include_router(admin_router, prefix="/admin", tags=["admin"])
+    api_v1_router.include_router(
+        notification_router, prefix="/notifications", tags=["notification"]
+    )
 
     app.include_router(api_v1_router, prefix="/api/v1")
 

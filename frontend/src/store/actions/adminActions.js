@@ -4,9 +4,9 @@ export const addWeatherAlertRequest = () => ({
     type: actionTypes.ADD_WEATHER_ALERT_REQUEST
 });
 
-export const addWeatherAlertSuccess = (notification) => ({
+export const addWeatherAlertSuccess = (weatherAlert) => ({
     type: actionTypes.ADD_WEATHER_ALERT_SUCCESS,
-    payload: notification
+    payload: weatherAlert
 });
 
 export const addWeatherAlertFailure = (error) => ({
@@ -18,9 +18,9 @@ export const cancelWeatherAlertRequest = () => ({
     type: actionTypes.CANCEL_WEATHER_ALERT_REQUEST
 });
 
-export const cancelWeatherAlertSuccess = (notificationId) => ({
+export const cancelWeatherAlertSuccess = (weatherAlertId) => ({
     type: actionTypes.CANCEL_WEATHER_ALERT_SUCCESS,
-    payload: notificationId
+    payload: weatherAlertId
 });
 
 export const cancelWeatherAlertFailure = (error) => ({
@@ -32,9 +32,9 @@ export const fetchWeatherAlertsRequest = () => ({
     type: actionTypes.FETCH_WEATHER_ALERT_REQUEST
 });
 
-export const fetchWeatherAlertsSuccess = (notifications) => ({
+export const fetchWeatherAlertsSuccess = (weatherAlerts) => ({
     type: actionTypes.FETCH_WEATHER_ALERT_SUCCESS,
-    payload: notifications
+    payload: weatherAlerts
 });
 
 export const fetchWeatherAlertsFailure = (error) => ({

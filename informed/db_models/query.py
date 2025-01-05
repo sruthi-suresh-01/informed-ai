@@ -19,6 +19,9 @@ class QueryState(Enum):
     def is_terminated(self) -> bool:
         return self in [QueryState.COMPLETED, QueryState.FAILED, QueryState.CANCELLED]
 
+    def is_failed(self) -> bool:
+        return self in [QueryState.FAILED, QueryState.CANCELLED]
+
 
 class QuerySource(BaseModel):
     source: str

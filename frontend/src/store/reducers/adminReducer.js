@@ -1,7 +1,7 @@
 import * as actionTypes from '../ActionTypes';
 
 const initialState = {
-    notifications: [],
+    weatherAlerts: [],
     isLoading: false,
     error: null
 };
@@ -17,7 +17,7 @@ function adminReducer(state = initialState, action) {
             return {
                 ...state,
                 isLoading: false,
-                notifications: [...state.notifications, action.payload],
+                weatherAlerts: [...state.weatherAlerts, action.payload],
                 error: null
             };
 
@@ -25,10 +25,10 @@ function adminReducer(state = initialState, action) {
             return {
                 ...state,
                 isLoading: false,
-                notifications: state.notifications.map(notification =>
-                    notification.id === action.payload
-                        ? { ...notification, is_active: false }
-                        : notification
+                weatherAlerts: state.weatherAlerts.map(weatherAlert =>
+                    weatherAlert.weather_alert_id === action.payload
+                        ? { ...weatherAlert, is_active: false }
+                        : weatherAlert
                 ),
                 error: null
             };
@@ -37,7 +37,7 @@ function adminReducer(state = initialState, action) {
             return {
                 ...state,
                 isLoading: false,
-                notifications: action.payload,
+                weatherAlerts: action.payload,
                 error: null
             };
 

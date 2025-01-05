@@ -14,10 +14,13 @@ from sqlalchemy import (
 from sqlalchemy import (
     Enum as SQLAlchemyEnum,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.types import Uuid as SQLAlchemyUuid
 from sqlmodel import Field, Relationship, SQLModel
 from typing import Any
+from pydantic import BaseModel
+from sqlalchemy.dialects.postgresql import JSONB
+from informed.db_models.shared_types import JSONBFromPydantic
 
 
 class AccountType(str, Enum):
@@ -49,6 +52,14 @@ class User(SQLModel, table=True):
             "UserMedicalDetails",
             back_populates="user",
             lazy="joined",  # Set lazy loading here
+            passive_deletes="all",
+        )
+    )
+    settings: Mapped["Settings"] = Relationship(
+        sa_relationship=relationship(
+            back_populates="user",
+            lazy="joined",
+            innerjoin=True,
             passive_deletes="all",
         )
     )
@@ -244,4 +255,32 @@ class WeatherSensitivities(SQLModel, table=True):
             back_populates="weather_sensitivities",
             lazy="joined",  # Set lazy loading here
         )
+    )
+
+
+"""
+This configuration model might need to change in the future.
+It is meant to store settings/configurations which may change over time.
+TODO: Introduce a property/method to extract/store only current valid configurations,
+      possibly with versioning or deprecation handling for older configuration formats.
+"""
+
+
+class UserConfigurations(BaseModel):
+    daily_updates: bool = False
+    daily_update_prompt: str = ""
+
+
+class Settings(SQLModel, table=True):
+    __tablename__ = "settings"  #  type: ignore
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    user_id: UUID = Field(foreign_key="users.user_id")
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    configurations: UserConfigurations = Field(
+        sa_column=Column(JSONBFromPydantic(UserConfigurations)), default_factory=dict
+    )
+    user: "User" = Relationship(
+        back_populates="settings",
     )
