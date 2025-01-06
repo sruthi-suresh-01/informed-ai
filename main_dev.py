@@ -43,9 +43,7 @@ def run_ui():
     ui_dir = os.path.join(os.getcwd(), "frontend")
     log.info("Starting UI in directory: {}", ui_dir)
     try:
-        subprocess.run(
-            ["npm", "run", "dev", "--no-open"], cwd=ui_dir, check=True
-        )  # noqa: S603
+        subprocess.run(["npm", "run", "start"], cwd=ui_dir, check=True)  # noqa: S603
     except subprocess.CalledProcessError as e:
         log.error("Failed to start UI: {}", str(e))
     except FileNotFoundError:
