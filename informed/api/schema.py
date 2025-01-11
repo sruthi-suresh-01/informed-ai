@@ -1,27 +1,26 @@
-from datetime import date, datetime
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
 
+from informed.db_models.chat import (
+    ChatThread,
+    Message,
+    MessageResponseType,
+    MessageSource,
+)
+from informed.db_models.notification import Notification, NotificationStatus
+from informed.db_models.query import Query, QuerySource, QueryState
 from informed.db_models.users import (
     Language,
+    Settings,
+    User,
     UserConfigurations,
     UserDetails,
     UserHealthConditions,
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
-    User,
-    Settings,
-)
-from informed.db_models.notification import Notification, NotificationStatus
-
-from informed.db_models.query import QueryState, Query, QuerySource
-from informed.db_models.chat import (
-    Message,
-    MessageSource,
-    MessageResponseType,
-    ChatThread,
 )
 
 

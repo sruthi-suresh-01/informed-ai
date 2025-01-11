@@ -1,21 +1,18 @@
-from typing import cast, Any
+import os
+from typing import Any, cast
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request, Response
+from google.api_core import client_options
+from google.cloud import texttospeech_v1beta1 as texttospeech
 from loguru import logger
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-
-from informed.helper.utils import UserDep
-from informed.api.schema import ChatRequest, AddUserMessageRequest, ChatResponse
-from google.cloud import texttospeech_v1beta1 as texttospeech
-from google.api_core import client_options
-import os
-from fastapi.responses import StreamingResponse
-import io
-from informed.informed import InformedManager
-from uuid import UUID
+from informed.api.schema import AddUserMessageRequest, ChatRequest, ChatResponse
 from informed.db_models.users import Language
+from informed.helper.utils import UserDep
+from informed.informed import InformedManager
 
 router = APIRouter()
 
@@ -130,5 +127,5 @@ async def get_query_tts(
         )
 
     except Exception as e:
-        logger.error(f"TTS Error: {str(e)}")
+        logger.error(f"TTS Error: {e!s}")
         raise HTTPException(status_code=500, detail="Error generating audio")

@@ -1,57 +1,56 @@
-
-
 export interface HealthCondition {
     condition: string;
     severity: string;
     description: string;
 }
+
 export interface WeatherSensitivity {
     type: string;
     description: string;
 }
 
 export interface UserDetails {
-    first_name: string;
-    last_name: string;
+    firstName: string;
+    lastName: string;
     age: number;
-    address_line1: string;
-    address_line2: string;
+    addressLine1: string;
+    addressLine2: string;
     city: string;
     state: string;
-    zip_code: string;
+    zipCode: string;
     country: string;
-    phone_number: string;
+    phoneNumber: string;
     ethnicity: string;
     language: string;
 }
 
 export interface UserSettings {
-    daily_updates: boolean;
-    daily_update_prompt: string;
+    dailyUpdates: boolean;
+    dailyUpdatePrompt: string;
 }
 
 export interface UserMedicalDetails {
-    blood_type: string;
+    bloodType: string;
     height: number;
     weight: number;
-    health_conditions: HealthCondition[];
-    weather_sensitivities: WeatherSensitivity[];
+    healthConditions: HealthCondition[];
+    weatherSensitivities: WeatherSensitivity[];
 }
 
 export interface NotificationItem {
-    notification_id: string;
+    notificationId: string;
     title: string;
     content: string;
     status: 'READY' | 'DELIVERED' | 'VIEWED';
-    created_at: string;
-    chat_thread_id?: string;
+    createdAt: string;
+    chatThreadId?: string;
 }
 
 export interface User {
     email: string;
-    account_type: 'admin' | 'superadmin' | 'user';
+    accountType: 'admin' | 'superadmin' | 'user';
     details?: UserDetails;
-    is_active?: boolean;
+    isActive?: boolean;
 }
 
 export type ResponseType = 'text' | 'audio' | 'text_message';
@@ -59,9 +58,9 @@ export type ResponseType = 'text' | 'audio' | 'text_message';
 export interface Message {
     source: 'webapp' | 'assistant';
     content: string;
-    message_id?: string;
-    response_type?: ResponseType;
-    requested_response_type?: ResponseType;
+    messageId?: string;
+    responseType?: ResponseType;
+    requestedResponseType?: ResponseType;
 }
 
 export interface WeatherAlert {

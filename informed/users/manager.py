@@ -1,10 +1,12 @@
-from informed.config import Config
-from informed.db_models.users import User
-from informed.db import session_maker
-from sqlalchemy.sql import select, ColumnElement
-from fastapi import HTTPException, status
-from uuid import UUID
 from typing import cast
+from uuid import UUID
+
+from fastapi import HTTPException, status
+from sqlalchemy.sql import ColumnElement, select
+
+from informed.config import Config
+from informed.db import session_maker
+from informed.db_models.users import User
 
 
 class UserManager:

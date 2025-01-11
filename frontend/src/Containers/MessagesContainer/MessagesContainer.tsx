@@ -69,8 +69,8 @@ export const MessagesContainer: React.FC<MessagesContainerProps> = ({
                                     </div>
                                     <span className={styles.agentTitle}>Assistant</span>
                                 </div>
-                                {(message.response_type || 'text') === 'audio' ? (
-                                    <AudioPlayer messageId={message.message_id!} />
+                                {(message.responseType || 'text') === 'audio' ? (
+                                    <AudioPlayer messageId={message.messageId!} />
                                 ) : (
                                     <p>{message.content}</p>
                                 )}

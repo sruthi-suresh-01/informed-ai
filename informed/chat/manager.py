@@ -1,15 +1,13 @@
 import asyncio
-import time
 from abc import ABC, abstractmethod
 from typing import cast
 from uuid import UUID
 
-from loguru import logger as log
-from sqlalchemy import ColumnElement, exists, select, text
-from informed.db import session_maker
+from sqlalchemy import ColumnElement, select
 
+from informed.api.schema import AddUserMessageRequest, ChatRequest
+from informed.db import session_maker
 from informed.db_models.chat import ChatThread, Message
-from informed.api.schema import ChatRequest, AddUserMessageRequest
 
 
 class ChatManager(ABC):

@@ -1,4 +1,4 @@
-import * as actionTypes from '../ActionTypes';
+import * as actionTypes from '../actionTypes';
 import { ChatAction } from '../types';
 
 export const chatUserMessageRequest = (): ChatAction => ({

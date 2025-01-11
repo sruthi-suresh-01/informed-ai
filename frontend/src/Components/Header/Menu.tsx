@@ -12,7 +12,7 @@ import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { AppDispatch } from '../../store/store';
-import { UserDetails } from '../../types';
+import { UserDetails, UserMedicalDetails, UserSettings } from '../../types';
 import HealthUpdate from '../../Containers/HealthUpdate/HealthUpdate';
 import UserUpdate from '../../Containers/UserUpdate/UserUpdate';
 import DialogWrapper from '../DialogWrapper/DialogWrapper';
@@ -116,10 +116,10 @@ export const Menu: React.FC = () => {
         dispatch(userActions.setUserDetails({ payload: dialogFormState[selectedMenuItem] as UserDetails }));
         break;
       case 'health_details':
-        dispatch(userActions.setUserMedicalDetails({ payload: dialogFormState[selectedMenuItem] }));
+        dispatch(userActions.setUserMedicalDetails({ payload: dialogFormState[selectedMenuItem] as UserMedicalDetails }));
         break;
       case 'settings':
-        dispatch(userActions.setUserSettings({ payload: dialogFormState[selectedMenuItem] }));
+        dispatch(userActions.setUserSettings({ payload: dialogFormState[selectedMenuItem] as UserSettings }));
         break;
     }
 

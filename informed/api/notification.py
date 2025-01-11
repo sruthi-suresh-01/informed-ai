@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Request
 from typing import cast
+
+from fastapi import APIRouter, Request
+
 from informed.api.schema import (
-    NotificationListResponse,
     BulkUpdateNotificationStatusRequest,
+    NotificationListResponse,
 )
-from informed.db_models.notification import NotificationStatus
 from informed.helper.utils import UserDep
 from informed.informed import InformedManager
 

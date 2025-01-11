@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID, uuid4
-from sqlalchemy import Column, DateTime, String, Text, Boolean
+
+from sqlalchemy import Boolean, Column, DateTime, String, Text
 from sqlalchemy.types import Uuid as SQLAlchemyUuid
 from sqlmodel import Field, SQLModel
 
@@ -22,6 +22,6 @@ class WeatherAlert(SQLModel, table=True):
     expires_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False)
     )
-    cancelled_at: Optional[datetime] = Field(
+    cancelled_at: datetime | None = Field(
         sa_column=Column(DateTime(timezone=True), nullable=True, default=None)
     )

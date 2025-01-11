@@ -1,29 +1,28 @@
-from informed.query.manager import QueryManager, UpdateQueryRequest
-from informed.config import Config
-from informed.db_models.query import Query, QueryState
-from informed.api.schema import QueryResponse
-from informed.agents.query_agent.query_agent import QueryAgent
-from uuid import UUID
-from loguru import logger as log
 import asyncio
-from typing import Callable, Awaitable
-
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
-from informed.llm.client import LLMClient
-from informed.db import session_maker
-from sqlalchemy.sql import select, ColumnElement
 from typing import cast
-from informed.db_models.users import User
+from uuid import UUID
+
 from fastapi import HTTPException, status
-from informed.users.manager import UserManager
-from informed.services.weather_alert_service import WeatherAlertService
+from loguru import logger as log
 from redis.asyncio import Redis
-from informed.chat.manager import DBChatManager
+from sqlalchemy.sql import ColumnElement, select
+
 from informed.agents.chat_agent.chat_agent import ChatAgent
-from informed.api.schema import ChatRequest, AddUserMessageRequest
-from informed.db_models.chat import ChatThread, Message, AssistantMessage
-from informed.services.notifications.manager import NotificationsManager
+from informed.api.schema import AddUserMessageRequest, ChatRequest
+from informed.chat.manager import DBChatManager
+from informed.config import Config
+from informed.db import session_maker
+from informed.db_models.chat import AssistantMessage, ChatThread, Message
 from informed.db_models.notification import Notification, NotificationStatus
+from informed.db_models.query import QueryState
+from informed.db_models.users import User
+from informed.llm.client import LLMClient
+from informed.query.manager import QueryManager
+from informed.services.notifications.manager import NotificationsManager
+from informed.services.weather_alert_service import WeatherAlertService
+from informed.users.manager import UserManager
 
 
 class InformedManager:
@@ -212,10 +211,8 @@ class InformedManager:
 
                     log.info(f"Created daily update chat thread for user {user_id}")
                 except Exception as e:
-                    log.error(
-                        f"Failed to send daily update to user {user_id}: {str(e)}"
-                    )
+                    log.error(f"Failed to send daily update to user {user_id}: {e!s}")
                     continue
 
         except Exception as e:
-            log.error(f"Failed to process daily updates: {str(e)}")
+            log.error(f"Failed to process daily updates: {e!s}")

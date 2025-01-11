@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel
 from sqlalchemy import Column
 from sqlmodel import Field, SQLModel
-from sqlalchemy.dialects.postgresql import JSONB
+
 from informed.db_models.shared_types import EnumAsString, JSONBFromPydantic
 
 

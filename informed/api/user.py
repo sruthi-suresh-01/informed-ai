@@ -3,34 +3,34 @@ import secrets
 import traceback
 from typing import cast
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import ColumnElement, delete, select
+from fastapi import APIRouter, HTTPException, Request, Response, status
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.exc import IntegrityError
 
-from informed.helper.utils import UserDep
 from informed.api.schema import (
+    AuthenticatedUserResponse,
     CreateUserRequest,
     LoginRequest,
+    SettingsRequest,
+    SettingsResponse,
     UserDetailsRequest,
     UserDetailsResponse,
     UserMedicalDetailsRequest,
     UserMedicalDetailsResponse,
-    AuthenticatedUserResponse,
-    SettingsRequest,
-    SettingsResponse,
 )
 from informed.db import session_maker
 from informed.db_models.users import (
     AccountType,
+    Settings,
     User,
+    UserConfigurations,
     UserDetails,
     UserHealthConditions,
     UserMedicalDetails,
     UserMedications,
     WeatherSensitivities,
-    Settings,
-    UserConfigurations,
 )
+from informed.helper.utils import UserDep
 
 router = APIRouter()
 
@@ -142,22 +142,20 @@ async def check_session_alive(
 ) -> AuthenticatedUserResponse:
     try:
         return AuthenticatedUserResponse.from_user(user=current_user)
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=400, detail="No active session found")
 
 
-@router.post("/details")
+@router.post("/details", response_model=UserDetailsResponse)
 async def set_user_details(
     details: UserDetailsRequest,
     current_user: UserDep,
-) -> dict:
+) -> UserDetailsResponse:
     async with session_maker() as session:
-        # Check if the user exists
         user = current_user
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Handle the user details
         if not user.details:
             user.details = UserDetails(
                 user_id=user.user_id,
@@ -165,7 +163,6 @@ async def set_user_details(
                 last_name=details.last_name,
             )
 
-        # Update user details
         user.details.first_name = details.first_name
         user.details.last_name = details.last_name
         user.details.age = details.age
@@ -190,7 +187,7 @@ async def set_user_details(
                 status_code=500, detail="An error occurred while updating user details"
             )
 
-    return {"message": "User details updated successfully"}
+    return UserDetailsResponse.from_user_details(user.details)
 
 
 @router.get("/details", response_model=UserDetailsResponse)
@@ -205,7 +202,6 @@ async def get_user_details(
     if not user.details:
         raise HTTPException(status_code=404, detail="User details not found")
 
-    # Construct the response
     return UserDetailsResponse.from_user_details(user.details)
 
 
@@ -221,20 +217,18 @@ async def get_medical_details(
     return UserMedicalDetailsResponse.from_user_medical_details(user.medical_details)
 
 
-@router.post("/medical-details")
+@router.post("/medical-details", response_model=UserMedicalDetailsResponse)
 async def set_medical_details(
     details: UserMedicalDetailsRequest,
     current_user: UserDep,
-) -> dict:
+) -> UserMedicalDetailsResponse:
     user = current_user
     try:
         async with session_maker() as session:
-            # Update or create medical details
             if user.medical_details:
                 medical_details = user.medical_details
             else:
                 medical_details = UserMedicalDetails(user_id=user.user_id)
-                # db.add(medical_details)
 
             medical_details.blood_type = details.blood_type
             medical_details.height = details.height
@@ -275,7 +269,7 @@ async def set_medical_details(
             user.medical_details = medical_details
             session.add(user)
             await session.commit()
-            return {"message": "Medical details updated successfully"}
+            return UserMedicalDetailsResponse.from_user_medical_details(medical_details)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"An unexpected error occurred: {e!s}"

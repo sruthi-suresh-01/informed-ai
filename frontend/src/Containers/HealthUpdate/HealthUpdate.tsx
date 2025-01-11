@@ -26,11 +26,11 @@ const sensitivityTypes = {
 } as const;
 
 const initialHealthDetails: UserMedicalDetails = {
-  blood_type: '',
+  bloodType: '',
   height: null,
   weight: null,
-  health_conditions: [],
-  weather_sensitivities: []
+  healthConditions: [],
+  weatherSensitivities: []
 };
 
 export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
@@ -38,7 +38,7 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
   const user = useSelector((state: RootState) => state.user.user);
   const isLoggedIn = useSelector((state: RootState) => state.user.loggedIn);
   const isLoading = useSelector((state: RootState) => state.user.isLoading);
-  const currentUserMedicalDetails = useSelector((state: RootState) => state.user.user_medical_details);
+  const currentUserMedicalDetails = useSelector((state: RootState) => state.user.userMedicalDetails);
   const [health, setHealth] = useState<UserMedicalDetails>(initialHealthDetails);
 
   useEffect(() => {
@@ -67,33 +67,33 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
   };
 
   const handleConditionChange = (index: number, field: keyof HealthCondition, value: string) => {
-    const updatedConditions = health.health_conditions.map((condition, i) => (
+    const updatedConditions = health.healthConditions.map((condition, i) => (
       i === index ? { ...condition, [field]: value } : condition
     ));
-    const updatedHealth = { ...health, health_conditions: updatedConditions };
+    const updatedHealth = { ...health, healthConditions: updatedConditions };
     setHealth(updatedHealth);
     onChange(updatedHealth);
   };
 
   const handleAddCondition = () => {
     const newCondition: HealthCondition = { condition: '', severity: 'Mild', description: '' };
-    const updatedHealth = { ...health, health_conditions: [...health.health_conditions, newCondition] };
+    const updatedHealth = { ...health, healthConditions: [...health.healthConditions, newCondition] };
     setHealth(updatedHealth);
     onChange(updatedHealth);
   };
 
   const handleRemoveCondition = (index: number) => {
-    const updatedConditions = health.health_conditions.filter((_, i) => i !== index);
-    const updatedHealth = { ...health, health_conditions: updatedConditions };
+    const updatedConditions = health.healthConditions.filter((_, i) => i !== index);
+    const updatedHealth = { ...health, healthConditions: updatedConditions };
     setHealth(updatedHealth);
     onChange(updatedHealth);
   };
 
   const handleSensitivityChange = (index: number, field: keyof WeatherSensitivity, value: string) => {
-    const updatedSensitivities = health.weather_sensitivities.map((sensitivity, i) => (
+    const updatedSensitivities = health.weatherSensitivities.map((sensitivity, i) => (
       i === index ? { ...sensitivity, [field]: value } : sensitivity
     ));
-    const updatedHealth = { ...health, weather_sensitivities: updatedSensitivities };
+    const updatedHealth = { ...health, weatherSensitivities: updatedSensitivities };
     setHealth(updatedHealth);
     onChange(updatedHealth);
   };
@@ -102,15 +102,15 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
     const newSensitivity: WeatherSensitivity = { type: 'rain', description: '' };
     const updatedHealth = {
       ...health,
-      weather_sensitivities: [...health.weather_sensitivities, newSensitivity]
+      weatherSensitivities: [...health.weatherSensitivities, newSensitivity]
     };
     setHealth(updatedHealth);
     onChange(updatedHealth);
   };
 
   const handleRemoveSensitivity = (index: number) => {
-    const updatedSensitivities = health.weather_sensitivities.filter((_, i) => i !== index);
-    const updatedHealth = { ...health, weather_sensitivities: updatedSensitivities };
+    const updatedSensitivities = health.weatherSensitivities.filter((_, i) => i !== index);
+    const updatedHealth = { ...health, weatherSensitivities: updatedSensitivities };
     setHealth(updatedHealth);
     onChange(updatedHealth);
   };
@@ -121,8 +121,8 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
         <TextField
           select
           label="Blood Type"
-          name="blood_type"
-          value={health.blood_type || ''}
+          name="bloodType"
+          value={health.bloodType || ''}
           onChange={handleChange}
           fullWidth
         >
@@ -157,7 +157,7 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
 
       <Grid item xs={12}>
         <Typography variant="h6">Weather Sensitivities</Typography>
-        {health.weather_sensitivities.map((sensitivity, index) => (
+          {health.weatherSensitivities.map((sensitivity, index) => (
           <Grid container spacing={2} key={index}>
             <Grid item xs={12}>
               <Grid container justifyContent="flex-end">
@@ -200,7 +200,7 @@ export const HealthUpdate: React.FC<HealthUpdateProps> = ({ onChange }) => {
 
       <Grid item xs={12}>
         <Typography variant="h6">Health Conditions</Typography>
-        {health.health_conditions.map((condition, index) => (
+        {health.healthConditions.map((condition, index) => (
           <Grid container spacing={2} key={index}>
             <Grid item xs={12}>
               <Grid container justifyContent="flex-end">

@@ -1,11 +1,10 @@
 import json
 from enum import Enum
-from typing import Any, Literal, Self
+from typing import Any, Self
 
 from loguru import logger as log
-from pydantic import BaseModel, Field, SecretStr, model_validator
+from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
 
 
 class WeatherSource(str, Enum):

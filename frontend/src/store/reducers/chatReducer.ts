@@ -1,4 +1,4 @@
-import * as actionTypes from '../ActionTypes';
+import * as actionTypes from '../actionTypes';
 import { ChatAction, ChatState } from '../types';
 
 const initialState: ChatState = {
@@ -22,7 +22,7 @@ const chatReducer = (
         ...state,
         isLoading: false,
         waitingForResponse: true,
-        currentChatThreadId: action.chat_thread_id || null,
+        currentChatThreadId: action.chatThreadId || null,
         messages: action.messages || [],
         error: null
       };
@@ -42,7 +42,7 @@ const chatReducer = (
         return {
           ...state,
           messages: action.messages,
-          currentChatThreadId: action.chat_thread_id || null,
+          currentChatThreadId: action.chatThreadId || null,
           waitingForResponse: false,
           error: null
         };

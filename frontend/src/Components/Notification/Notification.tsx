@@ -9,15 +9,8 @@ import * as userActions from '../../store/actionCreators/userActionCreators';
 import { RootState } from '../../store/types';
 import styles from './Notification.module.css';
 import { AppDispatch } from '../../store/store';
+import { NotificationItem } from '../../types';
 
-interface NotificationItem {
-  notification_id: string;
-  title: string;
-  content: string;
-  status: 'READY' | 'DELIVERED' | 'VIEWED';
-  created_at: string;
-  chat_thread_id?: string;
-}
 
 export const Notification: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,7 +27,7 @@ export const Notification: React.FC = () => {
     if (notifications.length > 0) {
       const readyNotifications = notifications
         .filter(n => n.status === 'READY')
-        .map(n => n.notification_id);
+        .map(n => n.notificationId);
 
       if (readyNotifications.length > 0) {
         dispatch(userActions.updateNotificationStatus({
@@ -50,7 +43,7 @@ export const Notification: React.FC = () => {
 
     const unreadNotifications = notifications
       .filter(n => n.status !== 'VIEWED')
-      .map(n => n.notification_id);
+      .map(n => n.notificationId);
 
     if (unreadNotifications.length > 0) {
       dispatch(userActions.updateNotificationStatus({
@@ -69,9 +62,9 @@ export const Notification: React.FC = () => {
   };
 
   const handleNotificationClick = (notification: NotificationItem) => {
-    if (notification.chat_thread_id) {
-      dispatch(chatActions.setCurrentChatThreadId(notification.chat_thread_id, true));
-      navigate(`/chat?id=${notification.chat_thread_id}`);
+    if (notification.chatThreadId) {
+      dispatch(chatActions.setCurrentChatThreadId(notification.chatThreadId, true));
+      navigate(`/chat?id=${notification.chatThreadId}`);
       handleClose();
     }
   };
@@ -102,7 +95,7 @@ export const Notification: React.FC = () => {
         ) : (
           notifications.map((notification) => (
             <MenuItem
-              key={notification.notification_id}
+              key={notification.notificationId}
               className={notification.status === 'VIEWED' ? styles.readNotification : styles.unreadNotification}
               onClick={() => handleNotificationClick(notification)}
             >
@@ -112,7 +105,7 @@ export const Notification: React.FC = () => {
                   {notification.content}
                 </div>
                 <div className={styles.notificationTime}>
-                  {formatTimeAgo(notification.created_at)}
+                  {formatTimeAgo(notification.createdAt)}
                 </div>
               </div>
             </MenuItem>

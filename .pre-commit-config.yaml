@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: validate-lint-static-and-dependencies
         name: linting, static and dependency checks
-        entry: make code-validate
+        entry: poetry run python misc/scripts/code_validate.py
         language: system
         pass_filenames: false
         always_run: true

@@ -10,12 +10,12 @@ import LoginDialog from './LoginDialog';
 import styles from './UserMenu.module.css';
 
 interface UserDetails {
-  first_name?: string;
-  last_name?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface User {
-  account_type?: 'admin' | 'superadmin' | 'user';
+  accountType?: 'admin' | 'superadmin' | 'user';
   details?: UserDetails;
 }
 
@@ -24,7 +24,7 @@ export const UserMenu: React.FC = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user.user as User);
   const isLoggedIn = useSelector((state: RootState) => state.user.loggedIn);
-  const isAdmin = user?.account_type === 'admin' || user?.account_type === 'superadmin';
+  const isAdmin = user?.accountType === 'admin' || user?.accountType === 'superadmin';
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -51,8 +51,8 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleRegister = (registerDetails: {
-    first_name: string;
-    last_name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     password: string;
     confirmPassword: string;
@@ -77,7 +77,7 @@ export const UserMenu: React.FC = () => {
         <IconButton onClick={handleMenuClick} size="large" className={styles.accountIcon}>
           {isLoggedIn ? (
             <Avatar className={styles.avatar}>
-              {user?.details?.first_name?.[0]}{user?.details?.last_name?.[0]}
+              {user?.details?.firstName?.[0]}{user?.details?.lastName?.[0]}
             </Avatar>
           ) : (
             <AccountCircleIcon />
@@ -110,7 +110,7 @@ export const UserMenu: React.FC = () => {
         >
           {isLoggedIn ? [
             <MenuItem key="name" disabled>
-              {user?.details?.first_name} {user?.details?.last_name}
+              {user?.details?.firstName} {user?.details?.lastName}
             </MenuItem>,
             isAdmin && (
               <MenuItem key="admin" onClick={handleAdminClick}>Admin Panel</MenuItem>

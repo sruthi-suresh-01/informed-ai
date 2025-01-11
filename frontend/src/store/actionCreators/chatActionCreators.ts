@@ -3,53 +3,43 @@ import { actions } from '../actions';
 import apiClient from '../apiClient';
 import { Constants } from "../../Config/Constants";
 import { ChatAction } from '../types';
-import { Message, ResponseType } from '../../types';
+import { ResponseType } from '../../types';
+import { ApiChatResponse, ApiChatMessageInput } from './types';
+import { transformRequestToSnakeCase, transformResponseToCamelCase } from '../../utils/apiUtils';
+
 const api_urls = Constants.apis;
 const chatActions = actions.chat;
-
-interface ChatMessageInput {
-  message: string;
-  requested_response_type: ResponseType;
-  chat_thread_id?: string | null;
-}
 
 interface ApiResponse<T> {
   data: T;
   error?: string;
 }
 
-interface ChatResponse {
-  chat_thread_id: string;
-  messages: Message[];
-}
-
 export const addUserMessage = (
   message: string,
-  chatThreadID: string | null = null,
+  chatThreadId: string | null = null,
   responseType: ResponseType = "text"
 ) => (dispatch: Dispatch<ChatAction>) => {
   dispatch(chatActions.chatUserMessageRequest());
 
   if (message) {
     let apiUrl = api_urls.addUserMessage;
-    const payload: ChatMessageInput = {
+    const payload: ApiChatMessageInput = {
       message,
-      requested_response_type: responseType
+      requestedResponseType: responseType
     };
 
-    if (chatThreadID) {
-      apiUrl = `${apiUrl}/${chatThreadID}`;
-      payload.chat_thread_id = chatThreadID;
+    if (chatThreadId) {
+      apiUrl = `${apiUrl}/${chatThreadId}`;
+      payload.chatThreadId = chatThreadId;
     }
 
-    apiClient.post<ApiResponse<ChatResponse>>(apiUrl, payload)
+    const apiPayload = transformRequestToSnakeCase(payload);
+    apiClient.post<ApiResponse<ApiChatResponse>>(apiUrl, apiPayload)
       .then(response => {
         const data = response.data;
-        if (data.error) {
-          dispatch(chatActions.chatUserMessageFailure(data.error));
-        } else {
-          dispatch(chatActions.chatUserMessageSuccess(data));
-        }
+        const transformedData = transformResponseToCamelCase(data);
+        dispatch(chatActions.chatUserMessageSuccess(transformedData));
       })
       .catch(error => {
         dispatch(chatActions.chatUserMessageFailure(error.message));
@@ -58,20 +48,13 @@ export const addUserMessage = (
 };
 
 export const getChatThread = (chatThreadId: string) => (dispatch: Dispatch<ChatAction>) => {
-  if (!chatThreadId) {
-    // TODO: Raise error here
-    return;
-  }
   dispatch(chatActions.chatAgentPollRequest());
 
-  apiClient.get<ApiResponse<ChatResponse>>(`${api_urls.getChatThread}/${chatThreadId}`)
+  apiClient.get<ApiResponse<ApiChatResponse>>(`${api_urls.getChatThread}/${chatThreadId}`)
     .then(response => {
       const data = response.data;
-      if (data.error) {
-        dispatch(chatActions.chatAgentPollFailure(data.error));
-      } else {
-        dispatch(chatActions.chatAgentPollSuccess(data));
-      }
+      const transformedData = transformResponseToCamelCase(data);
+      dispatch(chatActions.chatAgentPollSuccess(transformedData));
     })
     .catch(error => {
       dispatch(chatActions.chatAgentPollFailure(error.message));

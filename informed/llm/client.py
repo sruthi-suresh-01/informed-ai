@@ -1,13 +1,12 @@
-import json
 from typing import Any
 
+from langsmith import traceable
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion import Choice
 from openai.types.chat.chat_completion_message_tool_call import Function
+
 from informed.config import LLMConfig
 from informed.llm.llm import ChatState
-
-from langsmith import traceable
 
 
 class LLMClient:

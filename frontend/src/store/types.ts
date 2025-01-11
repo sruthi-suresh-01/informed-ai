@@ -10,9 +10,8 @@ export interface ChatAction extends Action {
   chatThreadId?: string;
   resetMessages?: boolean;
   messages?: Message[];
-  chat_thread_id?: string;
   query?: string;
-  query_id?: string;
+  queryId?: string;
 }
 
 export interface UserAction extends Action {
@@ -23,9 +22,9 @@ export interface UserState {
   user: User | null;
   loggedIn: boolean;
   isLoading: boolean;
-  user_details: UserDetails;
-  user_medical_details: UserMedicalDetails;
-  user_settings: UserSettings;
+  userDetails: UserDetails;
+  userMedicalDetails: UserMedicalDetails;
+  userSettings: UserSettings;
   notifications: NotificationItem[];
   error: string | null;
   isNotificationsLoading: boolean;

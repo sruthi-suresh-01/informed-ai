@@ -1,27 +1,26 @@
 import asyncio
 import contextlib
-from typing import Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 from loguru import logger as log
-from informed.db_models.query import Query
-from informed.query.manager import QueryManager
+
+from informed.agents.query_agent.query_runner import QueryRunner
 from informed.chat.manager import ChatManager
-from informed.db_models.chat import (
-    ChatThread,
-    Message,
-    UserMessage,
-    AssistantMessage,
-    MessageSource,
-)
-from informed.llm.client import LLMClient
 from informed.config import WeatherSourcesConfig
+from informed.db_models.chat import (
+    AssistantMessage,
+    Message,
+    MessageResponseType,
+    MessageSource,
+    UserMessage,
+)
+from informed.db_models.query import Query, QueryState
+from informed.db_models.users import Language
+from informed.llm.client import LLMClient
+from informed.query.manager import QueryManager
 from informed.services.weather_alert_service import WeatherAlertService
 from informed.users.manager import UserManager
-from informed.agents.query_agent.query_runner import QueryRunner
-from informed.db_models.chat import MessageResponseType
-from informed.db_models.users import Language
-from informed.db_models.query import QueryState
 
 
 class ChatAgent:
@@ -116,7 +115,7 @@ class ChatAgent:
 
     async def _handle_pending_messages(
         self, pending_messages: list[UserMessage]
-    ) -> None:  # noqa: C901
+    ) -> None:
         chat_thread = await self.chat_manager.get_chat_thread(self.chat_thread_id)
         if not chat_thread:
             raise ValueError(f"thread {self.chat_thread_id} not found")

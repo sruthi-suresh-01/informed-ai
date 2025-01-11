@@ -1,17 +1,17 @@
-import * as actionTypes from '../ActionTypes';
+import * as actionTypes from '../actionTypes';
 import { UserAction, UserState } from '../types';
 import { User } from '../../types';
 
 const initialState: UserState = {
   user: null,
-  user_details: null,
-  user_medical_details: null,
+  userDetails: null,
+  userMedicalDetails: null,
   error: null,
   isLoading: false,
   isNotificationsLoading: false,
   loggedIn: false,
   notifications: [],
-  user_settings: null
+  userSettings: null
 };
 
 const userReducer = (
@@ -53,25 +53,25 @@ const userReducer = (
 
     // User Details Actions
     case actionTypes.GET_USER_DETAILS_REQUEST:
-      return { ...state, isLoading: true, user_details: null, error: null };
+      return { ...state, isLoading: true, userDetails: null, error: null };
     case actionTypes.GET_USER_DETAILS_SUCCESS:
-      return { ...state, isLoading: false, user_details: action.payload, error: null };
+      return { ...state, isLoading: false, userDetails: action.payload, error: null };
     case actionTypes.GET_USER_DETAILS_FAILURE:
-      return { ...state, isLoading: false, user_details: null, error: action.payload as string };
+      return { ...state, isLoading: false, userDetails: null, error: action.payload as string };
     case actionTypes.SET_USER_DETAILS_REQUEST:
-      return { ...state, isLoading: true, user_details: null, error: null };
+      return { ...state, isLoading: true, userDetails: null, error: null };
     case actionTypes.SET_USER_DETAILS_SUCCESS:
-      return { ...state, isLoading: false, user_details: action.payload, error: null };
+      return { ...state, isLoading: false, userDetails: action.payload, error: null };
     case actionTypes.SET_USER_DETAILS_FAILURE:
-      return { ...state, isLoading: false, user_details: null, error: action.payload as string };
+      return { ...state, isLoading: false, userDetails: null, error: action.payload as string };
 
     // Medical Details Actions
     case actionTypes.GET_USER_MEDICAL_DETAILS_REQUEST:
-      return { ...state, isLoading: true, user_medical_details: null, error: null };
+      return { ...state, isLoading: true, userMedicalDetails: null, error: null };
     case actionTypes.GET_USER_MEDICAL_DETAILS_SUCCESS:
-      return { ...state, isLoading: false, user_medical_details: action.payload, error: null };
+      return { ...state, isLoading: false, userMedicalDetails: action.payload, error: null };
     case actionTypes.GET_USER_MEDICAL_DETAILS_FAILURE:
-      return { ...state, isLoading: false, user_medical_details: null, error: action.payload as string };
+      return { ...state, isLoading: false, userMedicalDetails: null, error: action.payload as string };
     case actionTypes.SET_USER_MEDICAL_DETAILS_REQUEST:
       return { ...state, isLoading: true, error: null };
     case actionTypes.SET_USER_MEDICAL_DETAILS_SUCCESS:
@@ -81,29 +81,29 @@ const userReducer = (
 
     // User Settings Actions
     case actionTypes.GET_USER_SETTINGS_REQUEST:
-      return { ...state, isLoading: true, user_settings: null, error: null };
+      return { ...state, isLoading: true, userSettings: null, error: null };
     case actionTypes.GET_USER_SETTINGS_SUCCESS:
-      return { ...state, isLoading: false, user_settings: action.payload, error: null };
+      return { ...state, isLoading: false, userSettings: action.payload, error: null };
     case actionTypes.GET_USER_SETTINGS_FAILURE:
-      return { ...state, isLoading: false, user_settings: null, error: action.payload as string };
+      return { ...state, isLoading: false, userSettings: null, error: action.payload as string };
     case actionTypes.SET_USER_SETTINGS_REQUEST:
-      return { ...state, isLoading: true, user_settings: null, error: null };
+      return { ...state, isLoading: true, userSettings: null, error: null };
     case actionTypes.SET_USER_SETTINGS_SUCCESS:
-      return { ...state, isLoading: false, user_settings: action.payload, error: null };
+      return { ...state, isLoading: false, userSettings: action.payload, error: null };
     case actionTypes.SET_USER_SETTINGS_FAILURE:
-      return { ...state, isLoading: false, user_settings: null, error: action.payload as string };
+      return { ...state, isLoading: false, userSettings: null, error: action.payload as string };
 
     // Notifications Actions
     case actionTypes.FETCH_NOTIFICATIONS_REQUEST:
       return { ...state, isNotificationsLoading: true, error: null };
     case actionTypes.FETCH_NOTIFICATIONS_SUCCESS:
-      return { ...state, isNotificationsLoading: false, notifications: action.payload as any[], error: null };
+      return { ...state, isNotificationsLoading: false, notifications: action.payload, error: null };
     case actionTypes.FETCH_NOTIFICATIONS_FAILURE:
       return { ...state, isNotificationsLoading: false, error: action.payload as string };
     case actionTypes.UPDATE_NOTIFICATION_STATUS_REQUEST:
       return { ...state, isLoading: true, error: null };
     case actionTypes.UPDATE_NOTIFICATION_STATUS_SUCCESS:
-      return { ...state, isLoading: false, notifications: action.payload as any[], error: null };
+      return { ...state, isLoading: false, notifications: action.payload, error: null };
     case actionTypes.UPDATE_NOTIFICATION_STATUS_FAILURE:
       return { ...state, isLoading: false, error: action.payload as string };
 

@@ -44,16 +44,16 @@ const states = [
 ] as const;
 
 const initialUserDetails: UserDetails = {
-  first_name: "",
-  last_name: "",
+  firstName: "",
+  lastName: "",
   age: null,
-  address_line1: "",
-  address_line2: "",
+  addressLine1: "",
+  addressLine2: "",
   city: "",
   state: "",
-  zip_code: "",
+  zipCode: "",
   country: "",
-  phone_number: "",
+  phoneNumber: "",
   ethnicity: "",
   language: "english"
 };
@@ -63,7 +63,7 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
   const user = useSelector((state: RootState) => state.user.user);
   const isLoggedIn = useSelector((state: RootState) => state.user.loggedIn);
   const isLoading = useSelector((state: RootState) => state.user.isLoading);
-  const currentUserDetails = useSelector((state: RootState) => state.user.user_details);
+  const currentUserDetails = useSelector((state: RootState) => state.user.userDetails);
   const [userDetails, setUserDetails] = useState<UserDetails>(initialUserDetails);
 
   useEffect(() => {
@@ -93,8 +93,8 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
       <Grid item xs={12} sm={6}>
         <TextField
           label="First Name"
-          name="first_name"
-          value={userDetails.first_name}
+          name="firstName"
+          value={userDetails.firstName}
           onChange={handleChange}
           fullWidth
         />
@@ -102,8 +102,8 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
       <Grid item xs={12} sm={6}>
         <TextField
           label="Last Name"
-          name="last_name"
-          value={userDetails.last_name}
+          name="lastName"
+          value={userDetails.lastName}
           onChange={handleChange}
           fullWidth
         />
@@ -121,8 +121,8 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
       <Grid item xs={12}>
         <TextField
           label="Address Line 1"
-          name="address_line1"
-          value={userDetails.address_line1}
+          name="addressLine1"
+          value={userDetails.addressLine1}
           onChange={handleChange}
           fullWidth
         />
@@ -130,8 +130,8 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
       <Grid item xs={12}>
         <TextField
           label="Address Line 2"
-          name="address_line2"
-          value={userDetails.address_line2}
+          name="addressLine2"
+          value={userDetails.addressLine2}
           onChange={handleChange}
           fullWidth
         />
@@ -165,8 +165,8 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
       <Grid item xs={12} sm={6}>
         <TextField
           label="ZIP Code"
-          name="zip_code"
-          value={userDetails.zip_code}
+          name="zipCode"
+          value={userDetails.zipCode}
           onChange={handleChange}
           fullWidth
         />
@@ -183,8 +183,8 @@ export const UserUpdate: React.FC<UserUpdateProps> = ({ onChange }) => {
       <Grid item xs={12}>
         <TextField
           label="Phone Number"
-          name="phone_number"
-          value={userDetails.phone_number}
+          name="phoneNumber"
+          value={userDetails.phoneNumber}
           onChange={handleChange}
           fullWidth
         />

@@ -1,5 +1,6 @@
-from informed.config import RedisConfig
 from redis.asyncio import Redis
+
+from informed.config import RedisConfig
 
 
 def init_redis_client(redis_config: RedisConfig) -> Redis:

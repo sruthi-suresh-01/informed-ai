@@ -1,33 +1,30 @@
 from sqlmodel import Field, Relationship, SQLModel
 
+from .chat import (
+    AssistantMessage,
+    ChatThread,
+    Message,
+    MessageResponseType,
+    MessageSource,
+    UserMessage,
+)
+from .notification import Notification, NotificationStatus
+from .query import Query, QuerySource, QueryState
 from .shared_types import EnumAsString, JSONBFromPydantic
 
 # If you have any utility functions or classes, import them here
 from .users import (
     Language,
+    Settings,
     User,
+    UserConfigurations,
     UserDetails,
+    UserHealthConditions,
     UserMedicalDetails,
     UserMedications,
-    UserHealthConditions,
     WeatherSensitivities,
-    Settings,
-    UserConfigurations,
 )
 from .weather_alert import WeatherAlert
-
-from .query import Query, QueryState, QuerySource
-
-from .chat import (
-    ChatThread,
-    Message,
-    MessageSource,
-    MessageResponseType,
-    UserMessage,
-    AssistantMessage,
-)
-
-from .notification import Notification, NotificationStatus
 
 __all__ = [
     # Base and utility classes

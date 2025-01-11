@@ -1,31 +1,25 @@
-from uuid import UUID
-from informed.query.manager import QueryManager
-from informed.db_models.query import Query, QueryState
-from loguru import logger as log
-from informed.db import session_maker
-from informed.helper.util import (
-    extract_user_info,
-    build_weather_query_context,
-    build_system_prompt,
-)
-from informed.db_models.query import QuerySource
-from informed.llm.schema import build_function_schema
-from informed.llm.client import LLMClient
-from informed.db_models.users import User
-from sqlalchemy.sql import select, ColumnElement
-from typing import cast, Any
-import json
 import asyncio
-from loguru import logger as log
-from fastapi import HTTPException, status
-import httpx
-from pydantic import BaseModel
-from informed.config import WeatherSourcesConfig
+import json
 from textwrap import dedent
-from datetime import datetime, UTC
+from uuid import UUID
+
+from loguru import logger as log
+from pydantic import BaseModel
+
+from informed.config import WeatherSourcesConfig
+from informed.db_models.query import Query, QuerySource, QueryState
+from informed.db_models.users import User
+from informed.helper.util import (
+    build_system_prompt,
+    build_weather_query_context,
+    extract_user_info,
+)
+from informed.llm.client import LLMClient
 from informed.llm.llm import ChatState
-from informed.users.manager import UserManager
+from informed.llm.schema import build_function_schema
+from informed.query.manager import QueryManager
 from informed.services.weather_alert_service import WeatherAlertService
+from informed.users.manager import UserManager
 
 
 class QueryResponse(BaseModel):
@@ -137,5 +131,5 @@ class QueryAgent:
         except Exception as e:
             query.state = QueryState.FAILED
             await self.query_manager.persist_query(query)
-            log.error(f"Error processing documents: {str(e)}")
+            log.error(f"Error processing documents: {e!s}")
             raise

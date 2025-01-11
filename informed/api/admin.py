@@ -1,15 +1,15 @@
 from datetime import datetime
-from typing import List, Optional
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from pydantic import BaseModel
-from sqlalchemy import select, ColumnElement
 from typing import cast
-from informed.db import session_maker
-from informed.db_models.weather_alert import WeatherAlert
-from informed.db_models.users import User, AccountType
-from informed.helper.utils import get_current_user
+from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from pydantic import BaseModel
+from sqlalchemy import ColumnElement, select
+
+from informed.db import session_maker
+from informed.db_models.users import AccountType, User
+from informed.db_models.weather_alert import WeatherAlert
+from informed.helper.utils import get_current_user
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ class WeatherAlertResponse(BaseModel):
     created_by: UUID
     created_at: datetime
     expires_at: datetime
-    cancelled_at: Optional[datetime] = None
+    cancelled_at: datetime | None = None
     is_active: bool
 
     @classmethod
@@ -110,8 +110,8 @@ async def cancel_weather_alert(
 
 @router.get("/weather-alerts", response_model=list[WeatherAlertResponse])
 async def list_weather_alerts(
-    zip_code: Optional[str] = Query(None, description="Filter by ZIP code"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    zip_code: str | None = Query(None, description="Filter by ZIP code"),
+    is_active: bool | None = Query(None, description="Filter by active status"),
     current_user: User = Depends(get_current_user),
 ) -> list[WeatherAlertResponse]:
     if current_user.account_type not in [AccountType.ADMIN, AccountType.SUPERADMIN]:

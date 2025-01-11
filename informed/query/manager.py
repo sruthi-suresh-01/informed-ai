@@ -1,13 +1,14 @@
-from informed.db_models.query import Query
-from uuid import UUID
-from informed.db import session_maker
-from sqlalchemy.sql import select, ColumnElement
-from typing import cast
-from informed.api.schema import UpdateQueryRequest, QueryResponse
-from informed.db_models.query import QueryState
+import asyncio
 from asyncio import Event
 from datetime import datetime, timedelta
-import asyncio
+from typing import cast
+from uuid import UUID
+
+from sqlalchemy.sql import ColumnElement, select
+
+from informed.api.schema import QueryResponse, UpdateQueryRequest
+from informed.db import session_maker
+from informed.db_models.query import Query
 
 
 class QueryManager:
@@ -87,7 +88,7 @@ class QueryManager:
             )
             self._query_updates[query_id].clear()
             return await self.get_query(query_id)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return await self.get_query(query_id)
         finally:
             # Cleanup if no updates for a while

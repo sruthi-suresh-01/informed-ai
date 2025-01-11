@@ -6,14 +6,14 @@ Create Date: 2025-01-02 20:35:04.722142+00:00
 
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 import sqlmodel
 import sqlmodel.sql.sqltypes
 from alembic import op
 
-from informed.db_models import Notification, NotificationStatus
+from informed.db_models import NotificationStatus
 from informed.db_models.shared_types import EnumAsString
 
 # revision identifiers, used by Alembic.

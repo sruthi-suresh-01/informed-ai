@@ -1,26 +1,14 @@
-from datetime import datetime
-from enum import Enum
 import time
+from enum import Enum
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel
 from sqlalchemy import Column
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.types import Uuid as SQLAlchemyUuid
-from sqlalchemy.types import String
+from sqlmodel import Column, Field, ForeignKey, Relationship, SQLModel
 
-from sqlalchemy.dialects.postgresql import JSONB
-from informed.db_models.shared_types import EnumAsString, JSONBFromPydantic
+from informed.db_models.shared_types import EnumAsString
 from informed.db_models.users import Language
-import time
-from enum import Enum
-from uuid import UUID, uuid4
-
-import sqlalchemy as sq
-from pydantic import BaseModel
-from sqlalchemy.orm import Mapped, declared_attr, relationship
-from sqlalchemy.types import String
-from sqlalchemy.types import Uuid as SQLAlchemyUuid
-from sqlmodel import Boolean, Column, Field, Relationship, SQLModel, ForeignKey
 
 
 class MessageResponseType(Enum):

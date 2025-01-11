@@ -6,12 +6,9 @@ Create Date: 2024-12-22 23:44:50.974847+00:00
 
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 from uuid import uuid4
 
-import sqlalchemy as sa
-import sqlmodel
-import sqlmodel.sql.sqltypes
 from alembic import op
 
 # revision identifiers, used by Alembic.

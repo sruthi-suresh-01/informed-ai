@@ -1,12 +1,12 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
+from pydantic import BaseModel
 from sqlalchemy import (
     Boolean,
     Column,
-    DateTime,
     ForeignKey,
     String,
     Text,
@@ -14,12 +14,10 @@ from sqlalchemy import (
 from sqlalchemy import (
     Enum as SQLAlchemyEnum,
 )
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.types import Uuid as SQLAlchemyUuid
 from sqlmodel import Field, Relationship, SQLModel
-from typing import Any
-from pydantic import BaseModel
-from sqlalchemy.dialects.postgresql import JSONB
+
 from informed.db_models.shared_types import JSONBFromPydantic
 
 

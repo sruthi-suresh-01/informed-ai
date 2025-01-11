@@ -1,11 +1,13 @@
 from typing import cast
 from uuid import UUID
+
 from sqlalchemy import ColumnElement, select, update
+
 from informed.db import session_maker
-from informed.db_models.users import User, Settings
-from informed.db_models.notification import Notification, NotificationStatus
 from informed.db_models.chat import AssistantMessage
+from informed.db_models.notification import Notification, NotificationStatus
 from informed.db_models.query import QueryState
+from informed.db_models.users import Settings, User
 
 
 class NotificationsManager:

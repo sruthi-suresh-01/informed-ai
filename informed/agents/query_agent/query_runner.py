@@ -6,18 +6,17 @@ from uuid import UUID
 from loguru import logger as log
 
 from informed.agents.query_agent.query_agent import QueryAgent
+from informed.config import WeatherSourcesConfig
 from informed.db_models.chat import (
     ChatThread,
 )
 from informed.db_models.query import (
     Query,
 )
-
 from informed.llm.client import LLMClient
-from informed.config import WeatherSourcesConfig
+from informed.query.manager import QueryManager
 from informed.services.weather_alert_service import WeatherAlertService
 from informed.users.manager import UserManager
-from informed.query.manager import QueryManager
 
 
 class QueryAgentTasks(NamedTuple):

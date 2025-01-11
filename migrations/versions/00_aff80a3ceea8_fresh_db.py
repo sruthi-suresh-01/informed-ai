@@ -6,14 +6,13 @@ Create Date: 2024-12-22 23:41:19.611737+00:00
 
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 import sqlmodel
 import sqlmodel.sql.sqltypes
 from alembic import op
 from sqlalchemy.dialects import postgresql
-
 
 # revision identifiers, used by Alembic.
 revision: str = "aff80a3ceea8"

@@ -1,20 +1,17 @@
 import ipaddress
+import os
+from datetime import UTC, datetime
+from textwrap import dedent
+from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-
-from informed.db_models.users import User
-import os
-from textwrap import dedent
-from datetime import datetime, UTC
-from informed.config import WeatherSourcesConfig
-from typing import Any, Optional
 from loguru import logger as log
-from sqlalchemy import select
-from informed.db import session_maker
-from informed.db_models.weather_alert import WeatherAlert
+
+from informed.config import WeatherSourcesConfig
+from informed.db_models.users import User
 from informed.services.weather_alert_service import WeatherAlertService
 
 APP_ENV = os.getenv("APP_ENV", "DEV")
@@ -216,7 +213,7 @@ async def get_air_quality_data(
     latitude: float,
     longitude: float,
     zip_code: str,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Fetch air quality data from configured source."""
     # Check for demo zip code
     if zip_code == "12345":
@@ -272,12 +269,12 @@ async def get_google_air_quality_data(
                 )
             return data
     except Exception as e:
-        log.error(f"Error fetching air quality data: {str(e)}")
+        log.error(f"Error fetching air quality data: {e!s}")
         raise ValueError("Error fetching air quality data")
 
 
 def build_air_quality_context(
-    air_quality_data: Optional[dict[str, Any]], source: str = "airnow"
+    air_quality_data: dict[str, Any] | None, source: str = "airnow"
 ) -> str:
     """Build context string based on air quality source"""
     if not air_quality_data:
@@ -369,7 +366,7 @@ async def build_weather_query_context(
             context += f"Wind: {current.get('wind_mph', 'N/A')} mph from {current.get('wind_dir', 'N/A')}\n"
             context += f"Humidity: {current.get('humidity', 'N/A')}%, Precipitation: {current.get('precip_in', 'N/A')} inches\n"
 
-            context += f"Today's Forecast:\n"
+            context += "Today's Forecast:\n"
             context += f"High: {forecast.get('maxtemp_f', 'N/A')}°F, Low: {forecast.get('mintemp_f', 'N/A')}°F\n"
             context += (
                 f"Condition: {forecast.get('condition', {}).get('text', 'N/A')}\n"
@@ -568,7 +565,7 @@ to business domain to extract good results without losing important context
 async def get_airnow_quality_data(
     weather_sources_config: WeatherSourcesConfig,
     zip_code: str,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Fetch current air quality data from AirNow API, focusing on PM2.5."""
     if not weather_sources_config.airnow or not weather_sources_config.airnow.api_key:
         log.warning("AirNow API configuration not found")
@@ -614,7 +611,7 @@ async def get_airnow_quality_data(
                 ],
             }
     except Exception as e:
-        log.error(f"Error fetching AirNow air quality data: {str(e)}")
+        log.error(f"Error fetching AirNow air quality data: {e!s}")
         return None
 
 

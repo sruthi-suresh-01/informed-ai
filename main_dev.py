@@ -1,4 +1,3 @@
-import ast
 import os
 import signal
 import subprocess
@@ -9,10 +8,8 @@ import uvicorn
 from fastapi import FastAPI
 from loguru import logger as log
 from sqlalchemy import create_engine
-from testcontainers.core.image import DockerImage
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
-
 
 # import misc.scripts.app.create_default_scenario_toolkits as toolkit_script
 from informed.config import get_config
@@ -43,7 +40,7 @@ def run_ui():
     ui_dir = os.path.join(os.getcwd(), "frontend")
     log.info("Starting UI in directory: {}", ui_dir)
     try:
-        subprocess.run(["npm", "run", "start"], cwd=ui_dir, check=True)  # noqa: S603
+        subprocess.run(["npm", "run", "start"], cwd=ui_dir, check=True)
     except subprocess.CalledProcessError as e:
         log.error("Failed to start UI: {}", str(e))
     except FileNotFoundError:

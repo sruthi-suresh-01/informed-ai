@@ -6,13 +6,12 @@ Create Date: 2024-12-25 21:06:17.044361+00:00
 
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import sqlalchemy as sa
-import sqlmodel
-import sqlmodel.sql.sqltypes
 from alembic import op
 from sqlalchemy.dialects import postgresql
+
 from informed.db_models.shared_types import JSONBFromPydantic
 from informed.db_models.users import UserConfigurations
 

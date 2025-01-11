@@ -3,7 +3,6 @@ from fastapi import FastAPI
 
 from informed.api.app import create_app
 from informed.config import Config, get_config
-from informed.logger.logger import setup_logger
 
 
 def create_default_app(config: Config | None = None) -> FastAPI:

@@ -1,13 +1,12 @@
-import traceback
-
 import json
+import traceback
+from typing import Annotated
 
-from fastapi import Request, Cookie, HTTPException, status, Depends
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from sqlalchemy.future import select
 
 from informed.db import session_maker
 from informed.db_models.users import User
-from typing import Annotated
 
 
 async def get_current_user(request: Request, session_token: str = Cookie(None)) -> User:

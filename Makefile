@@ -36,15 +36,9 @@ destroy-local-db:
 dev.migration.create: build-pgvector-local
 	@poetry run python misc/scripts/create_migration.py -m "$m"
 
-# Code Quality and Validation
-.PHONY: code-validate check ruff black pyright mypy deptry
-code-validate:
-	@$(MAKE) -j 8 check-poetry-lock black pyright mypy deptry
-
 check: ## 🚨 Run code quality tools.
 	@poetry run pre-commit run -a
 
-# ... (keep the individual check definitions like ruff, black, etc.)
 
 # Docker Image Building and Pushing
 .PHONY: build-ui build-core build-pgvector push-images
@@ -167,24 +161,6 @@ define run_check
 	fi; \
 }
 endef
-
-check-poetry-lock:
-	$(call run_check, check poetry lock file , poetry check --lock)
-
-ruff:
-	$(call run_check, ruff, poetry run ruff check .)
-
-black:
-	$(call run_check, black, poetry run black .)
-
-pyright:
-	$(call run_check, pyright, poetry run pyright)
-
-mypy:
-	$(call run_check, mypy, poetry run mypy informed)
-
-deptry:
-	$(call run_check, deptry, poetry run deptry . --extend-exclude ".*/node_modules/")
 
 # GCP Deployment
 .PHONY: gcp-deploy gcp-build-push

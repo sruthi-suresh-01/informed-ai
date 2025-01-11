@@ -1,7 +1,9 @@
-from informed.config import WeatherSourcesConfig
 from typing import Any
-from loguru import logger as log
+
 import httpx
+from loguru import logger as log
+
+from informed.config import WeatherSourcesConfig
 
 
 class WeatherApiClient:

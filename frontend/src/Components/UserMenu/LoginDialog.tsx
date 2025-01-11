@@ -7,8 +7,8 @@ interface LoginDetails {
 }
 
 interface RegisterDetails {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -27,8 +27,8 @@ const initialLoginDetails: LoginDetails = {
 };
 
 const initialRegisterDetails: RegisterDetails = {
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   password: '',
   confirmPassword: ''
@@ -84,8 +84,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onLogin
             <Grid item xs={12}>
               <TextField
                 label="First Name"
-                name="first_name"
-                value={registerDetails.first_name}
+                name="firstName"
+                value={registerDetails.firstName}
                 onChange={handleRegisterChange}
                 fullWidth
                 required
@@ -94,8 +94,8 @@ export const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onLogin
             <Grid item xs={12}>
               <TextField
                 label="Last Name"
-                name="last_name"
-                value={registerDetails.last_name}
+                name="lastName"
+                value={registerDetails.lastName}
                 onChange={handleRegisterChange}
                 fullWidth
                 required

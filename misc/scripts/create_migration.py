@@ -8,13 +8,13 @@ from testcontainers.postgres import PostgresContainer
 
 from informed.db_models import (  # noqa: F401
     Language,
+    Notification,
+    NotificationStatus,
+    Settings,
     User,
     UserDetails,
     UserMedicalDetails,
     WeatherAlert,
-    Settings,
-    Notification,
-    NotificationStatus,
 )
 
 if __name__ == "__main__":

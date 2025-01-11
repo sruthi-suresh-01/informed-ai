@@ -1,12 +1,14 @@
-from datetime import datetime, timezone
 import json
-from uuid import UUID
-from informed.config import Config
-from informed.db_models.weather_alert import WeatherAlert
-from informed.db import session_maker
-from sqlalchemy import select, ColumnElement
+from datetime import UTC, datetime
 from typing import cast
+from uuid import UUID
+
 from redis.asyncio import Redis
+from sqlalchemy import ColumnElement, select
+
+from informed.config import Config
+from informed.db import session_maker
+from informed.db_models.weather_alert import WeatherAlert
 
 
 class WeatherAlertService:
@@ -26,7 +28,7 @@ class WeatherAlertService:
         }
 
         # Calculate TTL in seconds - ensure both datetimes are timezone-aware
-        current_time = datetime.now(timezone.utc)
+        current_time = datetime.now(UTC)
         ttl = int((weather_alert.expires_at - current_time).total_seconds())
         if ttl > 0:
             # Store in sorted set for efficient retrieval

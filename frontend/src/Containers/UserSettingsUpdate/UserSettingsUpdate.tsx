@@ -12,8 +12,8 @@ interface UserSettingsProps {
 }
 
 const initialSettings: UserSettings = {
-  daily_updates: false,
-  daily_update_prompt: "",
+  dailyUpdates: false,
+  dailyUpdatePrompt: "",
 };
 
 export const UserSettingsUpdate: React.FC<UserSettingsProps> = ({ onChange }) => {
@@ -21,7 +21,7 @@ export const UserSettingsUpdate: React.FC<UserSettingsProps> = ({ onChange }) =>
   const user = useSelector((state: RootState) => state.user.user);
   const isLoggedIn = useSelector((state: RootState) => state.user.loggedIn);
   const isLoading = useSelector((state: RootState) => state.user.isLoading);
-  const currentSettings = useSelector((state: RootState) => state.user.user_settings);
+  const currentSettings = useSelector((state: RootState) => state.user.userSettings);
   const [settings, setSettings] = useState<UserSettings>(initialSettings);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export const UserSettingsUpdate: React.FC<UserSettingsProps> = ({ onChange }) =>
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, checked } = e.target as HTMLInputElement;
-    const newValue = name === 'daily_updates' ? checked : value;
+    const newValue = name === 'dailyUpdates' ? checked : value;
     const updatedSettings = { ...settings, [name]: newValue };
     setSettings(updatedSettings);
     onChange(updatedSettings);
@@ -55,9 +55,9 @@ export const UserSettingsUpdate: React.FC<UserSettingsProps> = ({ onChange }) =>
         <FormControlLabel
           control={
             <Switch
-              checked={settings.daily_updates || false}
+              checked={settings.dailyUpdates || false}
               onChange={handleChange}
-              name="daily_updates"
+              name="dailyUpdates"
             />
           }
           label="Receive Daily Updates"
@@ -66,13 +66,13 @@ export const UserSettingsUpdate: React.FC<UserSettingsProps> = ({ onChange }) =>
       <Grid item xs={12}>
         <TextField
           label="Daily Update Prompt"
-          name="daily_update_prompt"
-          value={settings.daily_update_prompt || ''}
+          name="dailyUpdatePrompt"
+          value={settings.dailyUpdatePrompt || ''}
           onChange={handleChange}
           fullWidth
           multiline
           rows={4}
-          disabled={!settings.daily_updates}
+          disabled={!settings.dailyUpdates}
           helperText="Customize your daily update prompt"
         />
       </Grid>

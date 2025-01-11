@@ -1,6 +1,5 @@
 from typing import Any
 
-from loguru import logger as log
 from openai.types.chat import ChatCompletionToolParam
 from pydantic import BaseModel
 
