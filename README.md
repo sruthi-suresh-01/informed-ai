@@ -8,6 +8,8 @@ Informed AI is designed to help users get personalized updates about the weather
 
 ### Initial Setup
 
+Note: For Windows, manually run the commands present in the Makefile
+
 1. **Fork the Repository**: Start by forking the repo to your GitHub account.
 2. **Clone and Navigate**: Clone the forked repository to your local machine and navigate to the root folder of the project.
 
