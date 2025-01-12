@@ -59,9 +59,9 @@ def main():
         with console.status(f"Running {check.name}..."):
             success, output = run_check(check)
             if success:
-                console.print(f"[green]✓[/green] {check.name}")
+                console.print(f"[green]OK[/green] {check.name}")
             else:
-                console.print(f"[red]✗[/red] {check.name}")
+                console.print(f"[red]FAIL[/red] {check.name}")
                 console.print(output)
                 failed = True
 

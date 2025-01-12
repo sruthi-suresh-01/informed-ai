@@ -1,8 +1,17 @@
+import asyncio
+
+# Looks ugly but apparently there is some issue with asyncio event loop on Windows
+# and the solution is to set a different event loop policy at the beginning of code execution
+# Best to look for an alternate solution, but since this is a file that is only
+# meant for running the app locally, we can keep this for now
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 import os
 import signal
 import subprocess
 import sys
 import threading
+import shutil
 
 import uvicorn
 from fastapi import FastAPI
@@ -11,7 +20,6 @@ from sqlalchemy import create_engine
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-# import misc.scripts.app.create_default_scenario_toolkits as toolkit_script
 from informed.config import get_config
 from informed.db import upgrade_db
 from main import create_default_app
@@ -40,7 +48,11 @@ def run_ui():
     ui_dir = os.path.join(os.getcwd(), "frontend")
     log.info("Starting UI in directory: {}", ui_dir)
     try:
-        subprocess.run(["npm", "run", "start"], cwd=ui_dir, check=True)
+        npm_path = shutil.which("npm")
+        if not npm_path:
+            log.error("npm not found in PATH. Make sure Node.js and npm are installed.")
+            return
+        subprocess.run([npm_path, "run", "start"], cwd=ui_dir, check=True)
     except subprocess.CalledProcessError as e:
         log.error("Failed to start UI: {}", str(e))
     except FileNotFoundError:
@@ -112,7 +124,7 @@ if __name__ == "__main__":
             if db_connection_string is None:
                 with PostgresContainer(
                     "postgres:latest", driver="psycopg"
-                ).with_bind_ports(5432, 5432) as postgres:
+                ).with_bind_ports(5432, 5433) as postgres:
                     db_connection_string = postgres.get_connection_url()
                     os.environ["DATABASE_CONFIG__DB_URL"] = db_connection_string
                     start_server(db_connection_string)
