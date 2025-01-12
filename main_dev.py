@@ -1,4 +1,10 @@
 import asyncio
+import os
+import signal
+import subprocess
+import sys
+import threading
+import shutil
 
 # Looks ugly but apparently there is some issue with asyncio event loop on Windows
 # and the solution is to set a different event loop policy at the beginning of code execution
@@ -6,12 +12,6 @@ import asyncio
 # meant for running the app locally, we can keep this for now
 if sys.platform.startswith("win"):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-import os
-import signal
-import subprocess
-import sys
-import threading
-import shutil
 
 import uvicorn
 from fastapi import FastAPI
