@@ -25,8 +25,18 @@ from informed.db import upgrade_db
 from main import create_default_app
 
 
-def strtobool(val):
-    return val.lower() in ("y", "yes", "t", "true", "on", "1")
+# def strtobool(val):
+#     return val.lower() in ("y", "yes", "t", "true", "on", "1")
+
+
+def safe_strtobool(value: str) -> bool:
+    """Safely convert a string to a boolean."""
+    value = value.lower().strip()
+    if value in ("y", "yes", "true", "t", "1"):
+        return True
+    elif value in ("n", "no", "false", "f", "0"):
+        return False
+    raise ValueError(f"Invalid boolean value: {value}")
 
 
 def _run_upgrade(db_connection_string: str):
