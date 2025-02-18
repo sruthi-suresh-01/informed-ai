@@ -45,6 +45,7 @@ def _run_upgrade(db_connection_string: str):
         upgrade_db(conn)
 
 
+# Fix 2: Ensure proper thread termination
 def signal_handler(signum, frame):
     log.info("Received termination signal. Cleaning up...")
     sys.exit(0)
@@ -65,13 +66,13 @@ def run_ui():
         subprocess.run([npm_path, "run", "start"], cwd=ui_dir, check=True)
     except subprocess.CalledProcessError as e:
         log.error("Failed to start UI: {}", str(e))
-    except FileNotFoundError:
+    except FileNotFoundError as e:  # Fix: Captured FileNotFoundError as e
         log.error("npm command not found. Make sure Node.js and npm are installed.")
 
 
 def start_server(db_connection_string: str) -> None:
     # Replace strtobool with ast.literal_eval
-    start_ui_flag = bool(strtobool(os.environ.get("USER_START_UI", "true")))
+    start_ui_flag = bool(safe_strtobool(os.environ.get("USER_START_UI", "true")))
 
     _run_upgrade(db_connection_string)
     print(f"db_connection_string: {db_connection_string}")
@@ -86,6 +87,7 @@ def start_server(db_connection_string: str) -> None:
     port = 3001
 
     ui_thread = None
+    server_thread = None  # Fix: Ensure server_thread is initialized
 
     try:
         # Start the server in a separate thread
