@@ -104,9 +104,11 @@ def start_server(db_connection_string: str) -> None:
             log.info("Starting UI...")
             ui_thread = threading.Thread(target=run_ui)
             ui_thread.start()
-
+        server_thread.join(
+            timeout=10
+        )  # Fix: Added timeout to prevent indefinite blocking
         # Keep the main thread alive
-        server_thread.join()
+        # server_thread.join()
 
     except KeyboardInterrupt:
         log.info("Shutting down...")
